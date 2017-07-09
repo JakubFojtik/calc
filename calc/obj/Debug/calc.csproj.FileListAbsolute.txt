@@ -1,0 +1,6 @@
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\obj\Debug\calc.csprojResolveAssemblyReference.cache
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\bin\Debug\calc.exe.config
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\bin\Debug\calc.exe
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\bin\Debug\calc.pdb
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\obj\Debug\calc.exe
+C:\Users\Kuba\documents\visual studio 2017\Projects\calc\calc\obj\Debug\calc.pdb
