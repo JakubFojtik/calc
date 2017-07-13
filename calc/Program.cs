@@ -51,14 +51,40 @@ namespace calc
             }
         }
 
+        private static List<Token> tokens;
+
+        private static void recWork(int start)
+        {
+            int end = start + 1;
+            while (!canReduce(start, end))
+            {
+
+            }
+        }
+
+        private static bool canReduce(int start, int end)
+        {
+            throw new NotImplementedException();
+        }
+
         private static AST parser(List<Token> tokens)
         {
+            Program.tokens = tokens;
+            /*
+            parse(all)
+                while(cantstop) read
+                ast token v tokenech
+                na zaac zav unarni +- bez priority
+                co s sin 5 + 2
+                recwork(sezer mi 1 argument jsem sinus)
+            */
+
             return new AST(new Token(TokenType.Operator, OperatorType.Plus),
                 new AST(new Token(TokenType.Number, 5)),
                 new AST(new Token(TokenType.Number, -1)));
         }
 
-        static bool isNumber(string buffer)
+        static bool isNumeric(string buffer)
         {
             return !string.IsNullOrWhiteSpace(buffer) && !buffer.Select(x => char.IsDigit(x) || decSeps.Contains(x)).Contains(false);
             //     && buffer.Count(x => decSeps.Contains(x)) <= 1;   aby ... nebylo 0 0 0 tak je tecka "cislici"-soucasti cisla
@@ -66,22 +92,37 @@ namespace calc
 
         private static bool isOperatorPrefix(string buffer)
         {
-            //Prefix enumeration of all operators. Return if it contains the buffer.
-            return !string.IsNullOrWhiteSpace(buffer)
-                && operators.Keys.SelectMany(x => Enumerable.Range(0, x.Length + 1).Select(i => x.Substring(0, i))).Contains(buffer);
+            return !string.IsNullOrWhiteSpace(buffer) && operatorPrefixes.Contains(buffer);
         }
 
-        static Dictionary<string, Tuple<TokenType, object>> operators = new Dictionary<string, Tuple<TokenType, object>>
+        enum Priority { None = 0, Unary, Mult, Add, Brace }
+
+        class OperatorData : Tuple<TokenType, object, Priority>
         {
-            { "(", new Tuple<TokenType, object>(TokenType.BraceOpen, null)},
-            { ")", new Tuple<TokenType, object>(TokenType.BraceClose, null)},
-            { "+", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.Plus)},
-            { "-", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.Minus)},
-            { "*", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.Star)},
-            { "/", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.Slash)},
-            { "sin", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.Sin)},
-            { "sinh", new Tuple<TokenType, object>(TokenType.Operator, OperatorType.SinH)},
+            public OperatorData(TokenType item1, object item2, Priority item3) : base(item1, item2, item3) { }
+        }
+
+        static Dictionary<string, OperatorData> operators = new Dictionary<string, OperatorData>
+        {
+            { "(",    new OperatorData(TokenType.BraceOpen, null , Priority.Brace)},
+            { ")",    new OperatorData(TokenType.BraceClose, null, Priority.Brace)},
+            { "+",    new OperatorData(TokenType.Operator, OperatorType.Plus ,Priority.Add)},
+            { "-",    new OperatorData(TokenType.Operator, OperatorType.Minus,Priority.Add)},
+            { "*",    new OperatorData(TokenType.Operator, OperatorType.Star ,Priority.Mult)},
+            { "/",    new OperatorData(TokenType.Operator, OperatorType.Slash,Priority.Mult)},
+            { "sin",  new OperatorData(TokenType.Operator, OperatorType.Sin  ,Priority.Unary)},
+            { "sinh", new OperatorData(TokenType.Operator, OperatorType.SinH ,Priority.Unary)},
         };
+        //Prefix enumeration of all operators.
+        static string[] _operatorPrefixes;
+        static string[] operatorPrefixes
+        {
+            get
+            {
+                return _operatorPrefixes
+                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => Enumerable.Range(0, x.Length + 1).Select(i => x.Substring(0, i))).ToArray());
+            }
+        }
 
         public enum State { Empty, Number, Operator }
 
@@ -94,7 +135,7 @@ namespace calc
             Action flushBuffer = () =>
             {
                 if (string.IsNullOrWhiteSpace(buffer)) return;
-                if (isNumber(buffer))
+                if (isNumeric(buffer))
                 {
                     if (buffer.Count(x => decSeps.Contains(x)) > 1) throw new InvalidOperationException("multiple decseps");
                     if (decSeps.Contains(buffer.First())) buffer = 0 + buffer;
@@ -114,10 +155,10 @@ namespace calc
                 {
                     case State.Empty:
                         buffer += c;
-                        state = isNumber(buffer) ? State.Number : State.Operator;
+                        state = isNumeric(buffer) ? State.Number : State.Operator;
                         break;
                     case State.Number:
-                        if (isNumber(buffer + c)) buffer += c;
+                        if (isNumeric(buffer + c)) buffer += c;
                         else
                         {
                             flushBuffer();
@@ -158,6 +199,21 @@ namespace calc
             public override string ToString()
             {
                 return string.Format("{0}({1})", Type, Value);
+            }
+        }
+
+        public class ASTToken : Token
+        {
+            public AST Ast { get; set; }
+
+            public ASTToken(AST ast) : base(TokenType.Number)
+            {
+                Ast = ast;
+            }
+
+            public override string ToString()
+            {
+                return "AST";
             }
         }
 
