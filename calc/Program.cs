@@ -52,20 +52,55 @@ namespace calc
         }
 
         private static List<Token> tokens;
+        private static Token curTok;
 
-        private static void recWork(int start)
+        private static void stackParser(List<Token> tokens)
         {
-            int end = start + 1;
-            while (!canReduce(start, end))
+            Program.tokens = tokens;
+            Stack<AST> stack = new Stack<AST>();
+
+            tokens.ForEach(x =>
+            {
+                while (tryReduce(stack, x)) { }
+
+                stack.Push(new AST(x));
+            });
+
+        }
+        
+        private static bool tryReduce(Stack<AST> stack, Token x)
+        {
+            //2 aargs for binops, 1 for unop, braces
+            //(23)^5
+            if (stack.Peek().value.Type == TokenType.BraceClose
+                && (x.Type != TokenType.Operator || (OperatorType)x.Value != OperatorType.Caret))
             {
 
             }
+
+            return false;
+        }
+        
+        private static void recWork(int start, Priority currentPriority)
+        {
+            //5+4-6*9^8-4
+            //readterm .5 =>5.
+            //reaadop + pri=add
+            //readexpr(untilAddOrBigger) =>.4-
+            //readexpr(untilAddOrBigger) =>4-.6*
+            //readexpr(untilAddOrBigger) =>6*.9^
+            //readexpr(untilAddOrBigger) =>9^8.-
+            //finishexpr => 9^8.-
+            //finishexpr => 6*9^8.-
+            //cosakra 3^4^5^6 vysl = ^3^4^56
+
+            //int end =
+            //while ()
+            {
+                //split unary aand postfix unary, + -6 => neg int
+            }
         }
 
-        private static bool canReduce(int start, int end)
-        {
-            throw new NotImplementedException();
-        }
 
         private static AST parser(List<Token> tokens)
         {
@@ -77,11 +112,60 @@ namespace calc
                 na zaac zav unarni +- bez priority
                 co s sin 5 + 2
                 recwork(sezer mi 1 argument jsem sinus)
+                -5^4 - co driv? ^ neresim unarni minus
+                pada priorita, zavorky jsou samost
+                lokalni ast, pamatuju, kam ho prippojit
+
+                priority - podle googlu sin sin 2 ^ 3 ^ 4 = sin(sin(2^(3^4)))
+                tj 2+2+2 = 2+(2+2) tj ctu aalespon stejne priority
             */
+
+            curTok = tokens.First();
+            recdesc();
 
             return new AST(new Token(TokenType.Operator, OperatorType.Plus),
                 new AST(new Token(TokenType.Number, 5)),
                 new AST(new Token(TokenType.Number, -1)));
+        }
+
+        private static void recdesc()
+        {
+            //expr
+            //readfirst
+            //readtok
+            //readsec:
+            //posilat startIndex
+            if(curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Plus || op == OperatorType.Minus)
+                     readFactor();//return
+                else throw new ArithmeticException(ERROR);
+            }
+            if (curTok.Type == TokenType.BraceOpen)
+                 readFactor();//return
+        }
+
+        private static void readFactor()
+        {
+            bool signIsPlus = true;
+            while(curTok.Type==TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Minus) signIsPlus ^= true;
+                else if (op == OperatorType.Plus) { }
+                else throw new ArithmeticException(ERROR);
+            }
+            if (curTok.Type == TokenType.Number)
+            {
+                var num = (decimal)curTok.Value;
+                if (!signIsPlus) num = -num;
+                //nejakvratit
+            }
+            if (curTok.Type == TokenType.BraceOpen)
+            {
+                //nejak++ a readFactor()
+            }
         }
 
         static bool isNumeric(string buffer)
@@ -95,26 +179,29 @@ namespace calc
             return !string.IsNullOrWhiteSpace(buffer) && operatorPrefixes.Contains(buffer);
         }
 
-        enum Priority { None = 0, Unary, Mult, Add, Brace }
+        enum Priority { None = 0, Add, Mult, Pow, Unary, Brace } //brace mimo
 
-        class OperatorData : Tuple<TokenType, object, Priority>
+        class OperatorData : Tuple<TokenType, OperatorType, Priority>
         {
-            public OperatorData(TokenType item1, object item2, Priority item3) : base(item1, item2, item3) { }
+            public OperatorData(TokenType item1, OperatorType item2, Priority item3) : base(item1, item2, item3) { }
         }
 
         static Dictionary<string, OperatorData> operators = new Dictionary<string, OperatorData>
         {
-            { "(",    new OperatorData(TokenType.BraceOpen, null , Priority.Brace)},
-            { ")",    new OperatorData(TokenType.BraceClose, null, Priority.Brace)},
+            { "(",    new OperatorData(TokenType.BraceOpen, OperatorType.None , Priority.Brace)},
+            { ")",    new OperatorData(TokenType.BraceClose, OperatorType.None, Priority.Brace)},
             { "+",    new OperatorData(TokenType.Operator, OperatorType.Plus ,Priority.Add)},
-            { "-",    new OperatorData(TokenType.Operator, OperatorType.Minus,Priority.Add)},
+            { "-",    new OperatorData(TokenType.Operator, OperatorType.Minus,Priority.Add)},   //dynamic
             { "*",    new OperatorData(TokenType.Operator, OperatorType.Star ,Priority.Mult)},
             { "/",    new OperatorData(TokenType.Operator, OperatorType.Slash,Priority.Mult)},
+            { "^",    new OperatorData(TokenType.Operator, OperatorType.Caret ,Priority.Pow)},
             { "sin",  new OperatorData(TokenType.Operator, OperatorType.Sin  ,Priority.Unary)},
             { "sinh", new OperatorData(TokenType.Operator, OperatorType.SinH ,Priority.Unary)},
         };
         //Prefix enumeration of all operators.
         static string[] _operatorPrefixes;
+        private static readonly string ERROR = "Mat chyba";
+
         static string[] operatorPrefixes
         {
             get
@@ -183,7 +270,7 @@ namespace calc
         }
 
         public enum TokenType { BraceOpen, BraceClose, Number, Operator }
-        public enum OperatorType { Plus, Minus, Star, Slash, Sin, SinH }
+        public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, SinH, Caret }
 
         public class Token
         {
