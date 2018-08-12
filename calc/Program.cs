@@ -139,11 +139,6 @@ namespace calc
             AST ret = readAll();
 
             return ret;
-            /*
-            return new AST(new Token(TokenType.Operator, OperatorType.Plus),
-                new AST(new Token(TokenType.Number, 5)),
-                new AST(new Token(TokenType.Number, -1)));
-            */
         }
 
         class Value
@@ -178,7 +173,15 @@ namespace calc
                 {
                     curTokIdx++;
                     var operate = operatorImpls[op].getAST;
-                    ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
+                    var operatorData = operators.Values.First(x => x.Operator == op);
+                    if (operatorData.Associativity == Associativity.Left)
+                    {
+                        ret = operate(ret, nextFun());
+                    }
+                    else
+                    {
+                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
+                    }
                 }
                 else
                 {
@@ -190,8 +193,40 @@ namespace calc
         }
 
         private static AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
-
-        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readFactor);
+        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readPow);
+        private static AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
+        /*
+        private static AST readUnary()
+        {
+            AST ret;
+            ret = nextFun();
+            var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
+            while (curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (operatorTypes.Contains(op))
+                {
+                    curTokIdx++;
+                    var operate = operatorImpls[op].getAST;
+                    var operatorData = operators.Values.First(x => x.Operator == op);
+                    if (operatorData.Associativity == Associativity.Left)
+                    {
+                        ret = operate(ret, nextFun());
+                    }
+                    else
+                    {
+                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
+                    }
+                }
+                else
+                {
+                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
+                    break;
+                }
+            }
+            return ret;
+        }
+        */
 
         private static AST readFactor()
         {
@@ -202,7 +237,10 @@ namespace calc
                 var op = (OperatorType)curTok.Value;
                 if (op == OperatorType.Minus) signIsPlus ^= true;
                 else if (op == OperatorType.Plus) { }
-                else throw new ArithmeticException(ERROR);
+                else
+                {
+                    break;
+                }
                 curTokIdx++;
             }
 
@@ -214,6 +252,12 @@ namespace calc
             else if (curTok.Type == TokenType.BraceOpen)
             {
                 ret = readBrace();
+            }
+            else if (curTok.Type == TokenType.Operator)
+            {
+                var funOp = curTok;
+                curTokIdx++;
+                ret = new AST(funOp, readFactor(), null);
             }
             else throw new ArithmeticException(ERROR);
 
@@ -254,12 +298,7 @@ namespace calc
 
         enum Priority { None = 0, Add, Mult, Unary, Pow, Brace } //brace mimo?
 
-        enum Associativity { Left = 0, Right }
-
-        class OperatorData : Tuple<TokenType, OperatorType, Priority, Associativity>
-        {
-            public OperatorData(TokenType item1, OperatorType item2, Priority item3, Associativity item4) : base(item1, item2, item3, item4) { }
-        }
+        enum Associativity { Left, Right }
 
         static Dictionary<string, (TokenType Token, OperatorType Operator, Priority Priority, Associativity Associativity)> operators
             = new Dictionary<string, (TokenType, OperatorType, Priority, Associativity)>
@@ -271,8 +310,8 @@ namespace calc
             { "*",    (TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  ) },
             { "/",    (TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  ) },
             { "^",    (TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right ) },
-            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Left  ) },
-            { "sinh", (TokenType.Operator,   OperatorType.SinH,  Priority.Unary, Associativity.Left  ) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Right  ) },
+            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Unary, Associativity.Right  ) },
         };
         static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
             = new Dictionary<OperatorType, (Func<AST, AST, AST>, Func<decimal, decimal, decimal>)>
@@ -281,6 +320,7 @@ namespace calc
             { OperatorType.Minus, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Minus), a, b), (a, b) => a - b) },
             { OperatorType.Star,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Star ), a, b), (a, b) => a * b) },
             { OperatorType.Slash, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Slash), a, b), (a, b) => a / b) },
+            { OperatorType.Caret, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Caret), a, b), (a, b) => (decimal)Math.Pow((double)a, (double)b)) },
         };
         //Prefix enumeration of all operators.
         static string[] _operatorPrefixes;
@@ -328,6 +368,12 @@ namespace calc
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
+                if (c == ' ')
+                {
+                    finalizeBuffer();
+                    continue;
+                }
+
                 switch (state)
                 {
                     case State.Empty:
@@ -358,7 +404,7 @@ namespace calc
         }
 
         public enum TokenType { BraceOpen, BraceClose, Number, Operator, EOF }
-        public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, SinH, Caret }
+        public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, ASin, Caret }
 
         public class Token
         {
@@ -409,7 +455,7 @@ namespace calc
                 switch (value.Type)
                 {
                     case TokenType.Number:
-                        return (decimal)value.Value;
+                        return (decimal)value.Value;    //todo convert or generic type
                     case TokenType.Operator:
                         var opType = (OperatorType)value.Value;
                         decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType].getDecimal(first.Value, second.Value);
@@ -420,6 +466,10 @@ namespace calc
                             case OperatorType.Minus:
                                 if (second != null) return defaultBinary(first, second);
                                 else return -1 * first.Value;
+                            case OperatorType.Sin:
+                                return (decimal)Math.Sin((double)first.Value);
+                            case OperatorType.ASin:
+                                return (decimal)Math.Asin((double)first.Value);
                         }
                     default:
                         throw new ArithmeticException(ERROR);
