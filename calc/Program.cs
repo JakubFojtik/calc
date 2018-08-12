@@ -17,15 +17,26 @@ namespace calc
                 string input = Console.ReadLine();
 
                 List<Token> tokens = lexer(input);
-                Console.WriteLine(string.Join(", ", tokens));
+                Console.WriteLine("Lexer: " + string.Join(", ", tokens));
 
-                Console.WriteLine();
+                Console.WriteLine("Parser:");
                 AST ast = parser(tokens);
-                printAST(ast);
+                printASTDFS(ast);
+                Console.WriteLine();
+                Console.WriteLine("Result: " + ast.compute());
+
+                if (curTokIdx != tokens.Count) Console.WriteLine("Error: Did not process all tokens.");
             }
         }
 
-        private static void printAST(AST ast)
+        private static void printASTDFS(AST ast)
+        {
+            Console.Write(ast.value + " ");
+            if (ast.left != null) printASTDFS(ast.left);
+            if (ast.right != null) printASTDFS(ast.right);
+        }
+
+        private static void printASTBFS(AST ast)
         {
             Queue<AST> q = new Queue<AST>();
             q.Enqueue(ast);
@@ -35,7 +46,6 @@ namespace calc
                 AST item = q.Dequeue();
                 Console.Write(item.value + " ");
                 numItems--;
-                if (numItems == 0) Console.WriteLine();
                 AST nextItem = item.left;
                 if (nextItem != null)
                 {
@@ -126,11 +136,9 @@ namespace calc
         {
             Program.tokens = tokens;
             curTokIdx = 0;
-            decimal ret = readAll();
-            Console.WriteLine(ret);
-            if (curTokIdx != tokens.Count) Console.WriteLine("Error: Did not process all tokens.");
+            AST ret = readAll();
 
-            return new AST(new Token(TokenType.Number, ret));
+            return ret;
             /*
             return new AST(new Token(TokenType.Operator, OperatorType.Plus),
                 new AST(new Token(TokenType.Number, 5)),
@@ -156,11 +164,11 @@ namespace calc
         //CISLO -> cislo | (SCIT)
         //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps
         //stromecek
-        private static Value readAll() => readAdd();
+        private static AST readAll() => readAdd();
 
-        private static Value readSimpleBinaryRemainer(Priority priority, Func<Value> nextFun)
+        private static AST readSimpleBinaryOperator(Priority priority, Func<AST> nextFun)
         {
-            Value ret;
+            AST ret;
             ret = nextFun();
             var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
             while (curTok.Type == TokenType.Operator)
@@ -169,8 +177,8 @@ namespace calc
                 if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
-                    var operate = operatorImpls[op];
-                    ret = operate(ret, nextFun());
+                    var operate = operatorImpls[op].getAST;
+                    ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
                 }
                 else
                 {
@@ -181,13 +189,13 @@ namespace calc
             return ret;
         }
 
-        private static Value readAdd() => readSimpleBinaryRemainer(Priority.Add, readMul);
+        private static AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
 
-        private static Value readMul() => readSimpleBinaryRemainer(Priority.Mult, readFactor);
+        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readFactor);
 
-        private static Value readFactor()
+        private static AST readFactor()
         {
-            Value ret;
+            AST ret;
             bool signIsPlus = true;
             while (curTok.Type == TokenType.Operator)
             {
@@ -200,7 +208,7 @@ namespace calc
 
             if (curTok.Type == TokenType.Number)
             {
-                ret = Convert.ToDecimal(curTok.Value);
+                ret = new AST(curTok);
                 curTokIdx++;
             }
             else if (curTok.Type == TokenType.BraceOpen)
@@ -209,13 +217,14 @@ namespace calc
             }
             else throw new ArithmeticException(ERROR);
 
-            if (!signIsPlus) ret.Negate();
+            if (!signIsPlus) ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), ret, null);
+
             return ret;
         }
 
-        private static Value readBrace()
+        private static AST readBrace()
         {
-            Value ret;
+            AST ret;
             curTokIdx++;
             ret = readAdd();
             if (curTok.Type == TokenType.BraceClose)
@@ -265,13 +274,13 @@ namespace calc
             { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Left  ) },
             { "sinh", (TokenType.Operator,   OperatorType.SinH,  Priority.Unary, Associativity.Left  ) },
         };
-        static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
-            = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
+        static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
+            = new Dictionary<OperatorType, (Func<AST, AST, AST>, Func<decimal, decimal, decimal>)>
         {
-            { OperatorType.Plus,  (a, b) => a + b },
-            { OperatorType.Minus, (a, b) => a - b },
-            { OperatorType.Star,  (a, b) => a * b },
-            { OperatorType.Slash, (a, b) => a / b },
+            { OperatorType.Plus,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Plus ), a, b), (a, b) => a + b) },
+            { OperatorType.Minus, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Minus), a, b), (a, b) => a - b) },
+            { OperatorType.Star,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Star ), a, b), (a, b) => a * b) },
+            { OperatorType.Slash, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Slash), a, b), (a, b) => a / b) },
         };
         //Prefix enumeration of all operators.
         static string[] _operatorPrefixes;
@@ -307,7 +316,7 @@ namespace calc
                     if (decSeps.Contains(buffer.Last())) buffer = buffer.TrimEnd(decSeps);
                     // convert all decimal separators to one - does not support thousand separators
                     buffer = string.Join(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, buffer.Split(decSeps));
-                    tokens.Add(new Token(TokenType.Number, Convert.ToDouble(buffer)));
+                    tokens.Add(new Token(TokenType.Number, Convert.ToDecimal(buffer)));
                 }
                 else if (operators.ContainsKey(buffer)) tokens.Add(new Token(operators[buffer].Token, operators[buffer].Operator));
                 else throw new InvalidOperationException("badbuffer");
@@ -390,6 +399,32 @@ namespace calc
                 right = r;
             }
             public AST(Token v) : this(v, null, null) { }
+
+            public override string ToString() => value.Value.ToString();
+
+            public decimal compute()
+            {
+                var first = left?.compute();
+                var second = right?.compute();
+                switch (value.Type)
+                {
+                    case TokenType.Number:
+                        return (decimal)value.Value;
+                    case TokenType.Operator:
+                        var opType = (OperatorType)value.Value;
+                        decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType].getDecimal(first.Value, second.Value);
+                        switch (opType)
+                        {
+                            default: //binary op
+                                return defaultBinary(first, second);
+                            case OperatorType.Minus:
+                                if (second != null) return defaultBinary(first, second);
+                                else return -1 * first.Value;
+                        }
+                    default:
+                        throw new ArithmeticException(ERROR);
+                }
+            }
         }
 
     }
