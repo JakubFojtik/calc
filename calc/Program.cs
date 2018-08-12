@@ -153,12 +153,12 @@ namespace calc
 
 
         //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
-        //SCIT -> SCIT + SCIT | NAS
-        //NAS -> NAS * NAS | MOC
-        //MOC -> MOC ^ CISLO | CISLO
+        //SCIT -> SCIT + NAS | NAS
+        //NAS -> NAS * MOC | MOC
+        //MOC -> CISLO ^ MOC | CISLO
         //CISLO -> cislo | (SCIT)
         //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps
-        //stromecek
+        //funkce? FUN -> ONEFUN FUN | MOC, ONEFUN -> sin | asin
         private static AST readAll() => readAdd();
 
         private static AST readSimpleBinaryOperator(Priority priority, Func<AST> nextFun)
@@ -166,7 +166,7 @@ namespace calc
             AST ret;
             ret = nextFun();
             var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
-            while (curTok.Type == TokenType.Operator)
+            while (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
             {
                 var op = (OperatorType)curTok.Value;
                 if (operatorTypes.Contains(op))
@@ -193,40 +193,29 @@ namespace calc
         }
 
         private static AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
-        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readPow);
+        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readUnary);
         private static AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
-        /*
+
+        //sin cos 1^5
+        //sin (1)^5 todo braces belong to sin
         private static AST readUnary()
         {
-            AST ret;
-            ret = nextFun();
-            var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
-            while (curTok.Type == TokenType.Operator)
+            AST ret = null;
+            var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Unary).Select(x => x.Operator);
+
+            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
             {
                 var op = (OperatorType)curTok.Value;
-                if (operatorTypes.Contains(op))
-                {
-                    curTokIdx++;
-                    var operate = operatorImpls[op].getAST;
-                    var operatorData = operators.Values.First(x => x.Operator == op);
-                    if (operatorData.Associativity == Associativity.Left)
-                    {
-                        ret = operate(ret, nextFun());
-                    }
-                    else
-                    {
-                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
-                    }
-                }
-                else
-                {
-                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
-                    break;
-                }
+                curTokIdx++;
+                var operate = operatorImpls[op].getAST;
+                ret = operate(readUnary(), null);
+            }
+            else
+            {
+                ret = readPow();
             }
             return ret;
         }
-        */
 
         private static AST readFactor()
         {
@@ -252,13 +241,14 @@ namespace calc
             else if (curTok.Type == TokenType.BraceOpen)
             {
                 ret = readBrace();
-            }
+            }/*
             else if (curTok.Type == TokenType.Operator)
             {
                 var funOp = curTok;
                 curTokIdx++;
                 ret = new AST(funOp, readFactor(), null);
-            }
+                new AST(new Token(TokenType.Operator, OperatorType.Star), ret, (decimal)1);
+            }*/
             else throw new ArithmeticException(ERROR);
 
             if (!signIsPlus) ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), ret, null);
@@ -321,6 +311,7 @@ namespace calc
             { OperatorType.Star,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Star ), a, b), (a, b) => a * b) },
             { OperatorType.Slash, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Slash), a, b), (a, b) => a / b) },
             { OperatorType.Caret, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Caret), a, b), (a, b) => (decimal)Math.Pow((double)a, (double)b)) },
+            { OperatorType.Sin,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Sin((double)a)) },
         };
         //Prefix enumeration of all operators.
         static string[] _operatorPrefixes;
