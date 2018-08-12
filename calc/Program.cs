@@ -62,6 +62,7 @@ namespace calc
             }
         }
 
+        #region ?
         private static void stackParser(List<Token> tokens)
         {
             Program.tokens = tokens;
@@ -109,33 +110,39 @@ namespace calc
             }
         }
 
+        /*
+        parse(all)
+            while(cantstop) read
+            ast token v tokenech
+            na zac zav unarni +- bez priority
+            co s sin 5 + 2 - zrat minimum
+            recwork(sezer mi 1 argument jsem sinus)
+            -5^4 - co driv? ^ neresim unarni minus
+            pada priorita, zavorky jsou samost
+            lokalni ast, pamatuju, kam ho prippojit
+
+            priority - podle googlu sin sin 2 ^ 3 ^ 4 = sin(sin(2^(3^4)))
+            tj 2+2+2 = 2+(2+2) tj ctu aalespon stejne priority
+            ale 1/2/3 = (1/2)/3
+            takze dulezitejsi  je poradi vyhodnocovani
+        */
+
+        #endregion ?
 
         private static AST parser(List<Token> tokens)
         {
             Program.tokens = tokens;
-            /*
-            parse(all)
-                while(cantstop) read
-                ast token v tokenech
-                na zac zav unarni +- bez priority
-                co s sin 5 + 2 - zrat minimum
-                recwork(sezer mi 1 argument jsem sinus)
-                -5^4 - co driv? ^ neresim unarni minus
-                pada priorita, zavorky jsou samost
-                lokalni ast, pamatuju, kam ho prippojit
-
-                priority - podle googlu sin sin 2 ^ 3 ^ 4 = sin(sin(2^(3^4)))
-                tj 2+2+2 = 2+(2+2) tj ctu aalespon stejne priority
-                ale 1/2/3 = (1/2)/3
-                takze dulezitejsi  je poradi vyhodnocovani
-            */
-
             curTokIdx = 0;
-            Console.WriteLine(readAll());
+            decimal ret = readAll();
+            Console.WriteLine(ret);
+            if (curTokIdx != tokens.Count) Console.WriteLine("Error: Did not process all tokens.");
 
+            return new AST(new Token(TokenType.Number, ret));
+            /*
             return new AST(new Token(TokenType.Operator, OperatorType.Plus),
                 new AST(new Token(TokenType.Number, 5)),
                 new AST(new Token(TokenType.Number, -1)));
+            */
         }
 
         class Value
@@ -152,6 +159,11 @@ namespace calc
                 return new Value(d);
             }
 
+            public static implicit operator decimal(Value d)
+            {
+                return d.val;
+            }
+
             public void Negate()    // Invert?
             {
                 val = -val;
@@ -164,37 +176,68 @@ namespace calc
         }
 
 
-        //Gramatika - nejvic zanorene jsou nejvyssi priority, Start: SCIT
-        //SCIT -> SCIT + NAS | NAS
-        //NAS -> NAS * MOC | MOC
-        //MOC -> MOC * CISLO | CISLO
-        //CISLO -> CISLO | (SCIT)
-        //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ NAS ?SCIT|eps
+        //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
+        //SCIT -> SCIT + SCIT | NAS
+        //NAS -> NAS * NAS | MOC
+        //MOC -> MOC ^ CISLO | CISLO
+        //CISLO -> cislo | (SCIT)
+        //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps
         //stromecek
         private static Value readAll()
         {
-            Value retExp;
-            Value retRem;
-            retExp = readRem();
-            retRem = readRem();
-            return retExp; //todo?
+            Value ret = readAdd();
+            return ret; //todo?
         }
 
-        private static Value readRem() //??? read scit aa read nas...
+        private static Value readAdd()
         {
             Value ret;
-            if (curTok.Type == TokenType.Operator)
+            ret = readMul();
+            while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Plus || op == OperatorType.Minus)
-                    ret = readFactor();//return
-                else throw new ArithmeticException(ERROR);
+                if (op == OperatorType.Plus)
+                {
+                    curTokIdx++;
+                    ret = ret + readMul();
+                }
+                else if (op == OperatorType.Minus)
+                {
+                    curTokIdx++;
+                    ret = ret - readMul();
+                }
+                else
+                {
+                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
+                    break;
+                }
             }
-            else if (curTok.Type == TokenType.Number)
-                ret = readFactor();
-            else if (curTok.Type == TokenType.BraceOpen)
-                ret = readBrace();
-            else throw new ArithmeticException(ERROR);
+            return ret;
+        }
+
+        private static Value readMul()
+        {
+            Value ret;
+            ret = readFactor();
+            while (curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Star)
+                {
+                    curTokIdx++;
+                    ret = ret * readFactor();
+                }
+                else if (op == OperatorType.Slash)
+                {
+                    curTokIdx++;
+                    ret = ret / readFactor();
+                }
+                else
+                {
+                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
+                    break;
+                }
+            }
             return ret;
         }
 
@@ -230,7 +273,7 @@ namespace calc
         {
             Value ret;
             curTokIdx++;
-            ret = readRem();
+            ret = readAdd();
             if (curTok.Type == TokenType.BraceClose)
             {
                 curTokIdx++;
