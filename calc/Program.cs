@@ -53,14 +53,7 @@ namespace calc
 
         private static List<Token> tokens;
         private static int curTokIdx;
-        private static Token curTok
-        {
-            get
-            {
-                if (curTokIdx < tokens.Count) return tokens[curTokIdx];
-                else return new Token(TokenType.EOF);
-            }
-        }
+        private static Token curTok => tokens.ElementAtOrDefault(curTokIdx) ?? new Token(TokenType.EOF);
 
         #region ?
         private static void stackParser(List<Token> tokens)
@@ -148,31 +141,11 @@ namespace calc
         class Value
         {
             private decimal val;
-
-            public Value(decimal d)
-            {
-                val = d;
-            }
-
-            public static implicit operator Value(decimal d)
-            {
-                return new Value(d);
-            }
-
-            public static implicit operator decimal(Value d)
-            {
-                return d.val;
-            }
-
-            public void Negate()    // Invert?
-            {
-                val = -val;
-            }
-
-            public override string ToString()
-            {
-                return val.ToString();
-            }
+            public Value(decimal d) => val = d;
+            public static implicit operator Value(decimal d) => new Value(d);
+            public static implicit operator decimal(Value d) => d.val;
+            public void Negate() => val = -val;
+            public override string ToString() => val.ToString();
         }
 
 
@@ -183,28 +156,21 @@ namespace calc
         //CISLO -> cislo | (SCIT)
         //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps
         //stromecek
-        private static Value readAll()
-        {
-            Value ret = readAdd();
-            return ret; //todo?
-        }
+        private static Value readAll() => readAdd();
 
-        private static Value readAdd()
+        private static Value readSimpleBinaryRemainer(Priority priority, Func<Value> nextFun)
         {
             Value ret;
-            ret = readMul();
+            ret = nextFun();
+            var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
             while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Plus)
+                if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
-                    ret = ret + readMul();
-                }
-                else if (op == OperatorType.Minus)
-                {
-                    curTokIdx++;
-                    ret = ret - readMul();
+                    var operate = operatorImpls[op];
+                    ret = operate(ret, nextFun());
                 }
                 else
                 {
@@ -215,31 +181,9 @@ namespace calc
             return ret;
         }
 
-        private static Value readMul()
-        {
-            Value ret;
-            ret = readFactor();
-            while (curTok.Type == TokenType.Operator)
-            {
-                var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Star)
-                {
-                    curTokIdx++;
-                    ret = ret * readFactor();
-                }
-                else if (op == OperatorType.Slash)
-                {
-                    curTokIdx++;
-                    ret = ret / readFactor();
-                }
-                else
-                {
-                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
-                    break;
-                }
-            }
-            return ret;
-        }
+        private static Value readAdd() => readSimpleBinaryRemainer(Priority.Add, readMul);
+
+        private static Value readMul() => readSimpleBinaryRemainer(Priority.Mult, readFactor);
 
         private static Value readFactor()
         {
@@ -297,10 +241,7 @@ namespace calc
             return true;
         }
 
-        private static bool isOperatorPrefix(string buffer)
-        {
-            return !string.IsNullOrWhiteSpace(buffer) && operatorPrefixes.Contains(buffer);
-        }
+        private static bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
 
         enum Priority { None = 0, Add, Mult, Unary, Pow, Brace } //brace mimo?
 
@@ -311,17 +252,26 @@ namespace calc
             public OperatorData(TokenType item1, OperatorType item2, Priority item3, Associativity item4) : base(item1, item2, item3, item4) { }
         }
 
-        static Dictionary<string, OperatorData> operators = new Dictionary<string, OperatorData>
+        static Dictionary<string, (TokenType Token, OperatorType Operator, Priority Priority, Associativity Associativity)> operators
+            = new Dictionary<string, (TokenType, OperatorType, Priority, Associativity)>
         {
-            { "(",    new OperatorData(TokenType.BraceOpen,  OperatorType.None,  Priority.Brace, Associativity.Right )},
-            { ")",    new OperatorData(TokenType.BraceClose, OperatorType.None,  Priority.Brace, Associativity.Left  )},
-            { "+",    new OperatorData(TokenType.Operator,   OperatorType.Plus,  Priority.Add,   Associativity.Left  )},
-            { "-",    new OperatorData(TokenType.Operator,   OperatorType.Minus, Priority.Add,   Associativity.Left  )}, //dynamic
-            { "*",    new OperatorData(TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  )},
-            { "/",    new OperatorData(TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  )},
-            { "^",    new OperatorData(TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right )},
-            { "sin",  new OperatorData(TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Left  )},
-            { "sinh", new OperatorData(TokenType.Operator,   OperatorType.SinH,  Priority.Unary, Associativity.Left  )},
+            { "(",    (TokenType.BraceOpen,  OperatorType.None,  Priority.Brace, Associativity.Right ) },
+            { ")",    (TokenType.BraceClose, OperatorType.None,  Priority.Brace, Associativity.Left  ) },
+            { "+",    (TokenType.Operator,   OperatorType.Plus,  Priority.Add,   Associativity.Left  ) },
+            { "-",    (TokenType.Operator,   OperatorType.Minus, Priority.Add,   Associativity.Left  ) }, //dynamic
+            { "*",    (TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  ) },
+            { "/",    (TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  ) },
+            { "^",    (TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right ) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Left  ) },
+            { "sinh", (TokenType.Operator,   OperatorType.SinH,  Priority.Unary, Associativity.Left  ) },
+        };
+        static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
+            = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
+        {
+            { OperatorType.Plus,  (a, b) => a + b },
+            { OperatorType.Minus, (a, b) => a - b },
+            { OperatorType.Star,  (a, b) => a * b },
+            { OperatorType.Slash, (a, b) => a / b },
         };
         //Prefix enumeration of all operators.
         static string[] _operatorPrefixes;
@@ -331,11 +281,11 @@ namespace calc
         {
             get
             {
-                Func<string, IEnumerable<int>> substrLengths = str => Enumerable.Range(1, str.Length);
-                Func<string, IEnumerable<int>, IEnumerable<string>> substrings = (str, lengths) => lengths.Select(i => str.Substring(0, i));
+                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
+                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
 
                 return _operatorPrefixes
-                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, substrLengths(x))).ToArray());
+                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
             }
         }
 
@@ -347,7 +297,7 @@ namespace calc
             string buffer = "";
             State state = State.Empty;
             //Action<TokenType, object> addToken = (type, val) => tokens.Add(new Token(type, val));
-            Action finalizeBuffer = () =>
+            void finalizeBuffer()
             {
                 if (string.IsNullOrWhiteSpace(buffer)) return;
                 if (isNumeric(buffer))
@@ -359,12 +309,12 @@ namespace calc
                     buffer = string.Join(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, buffer.Split(decSeps));
                     tokens.Add(new Token(TokenType.Number, Convert.ToDouble(buffer)));
                 }
-                else if (operators.ContainsKey(buffer)) tokens.Add(new Token(operators[buffer].Item1, operators[buffer].Item2));
+                else if (operators.ContainsKey(buffer)) tokens.Add(new Token(operators[buffer].Token, operators[buffer].Operator));
                 else throw new InvalidOperationException("badbuffer");
 
-                Action setEmpty = () => { buffer = ""; state = State.Empty; };
+                void setEmpty() { buffer = ""; state = State.Empty; }
                 setEmpty();
-            };
+            }
 
             for (int i = 0; i < input.Length; i++)
             {
@@ -412,10 +362,7 @@ namespace calc
                 Value = value;
             }
 
-            public override string ToString()
-            {
-                return string.Format("{0}({1})", Type, Value);
-            }
+            public override string ToString() => string.Format("{0}({1})", Type, Value);
         }
 
         public class ASTToken : Token
@@ -427,10 +374,7 @@ namespace calc
                 Ast = ast;
             }
 
-            public override string ToString()
-            {
-                return "AST";
-            }
+            public override string ToString() => "AST";
         }
 
         public class AST
