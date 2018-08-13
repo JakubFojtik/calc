@@ -65,73 +65,6 @@ namespace calc
         private static int curTokIdx;
         private static Token curTok => tokens.ElementAtOrDefault(curTokIdx) ?? new Token(TokenType.EOF);
 
-        #region ?
-        private static void stackParser(List<Token> tokens)
-        {
-            Program.tokens = tokens;
-            Stack<AST> stack = new Stack<AST>();
-
-            tokens.ForEach(x =>
-            {
-                while (tryReduce(stack, x)) { }
-
-                stack.Push(new AST(x));
-            });
-
-        }
-
-        private static bool tryReduce(Stack<AST> stack, Token x)
-        {
-            //2 aargs for binops, 1 for unop, braces
-            //(23)^5
-            if (stack.Peek().value.Type == TokenType.BraceClose
-                && (x.Type != TokenType.Operator || (OperatorType)x.Value != OperatorType.Caret))
-            {
-
-            }
-
-            return false;
-        }
-
-        private static void recWork(int start, Priority currentPriority)
-        {
-            //5+4-6*9^8*2-4
-            //readterm .5 =>5.
-            //reaadop + pri=add
-            //readexpr(untilAddOrBigger) =>.4-
-            //readexpr(untilAddOrBigger) =>4-.6*
-            //readexpr(untilAddOrBigger) =>6*.9^
-            //readexpr(untilAddOrBigger) =>9^8.-
-            //finishexpr => 9^8.-
-            //finishexpr => 6*9^8.-
-            //cosakra 3^4^5^6 vysl = ^3^4^56
-
-            //int end =
-            //while ()
-            {
-                //split unary aand postfix unary, + -6 => neg int
-            }
-        }
-
-        /*
-        parse(all)
-            while(cantstop) read
-            ast token v tokenech
-            na zac zav unarni +- bez priority
-            co s sin 5 + 2 - zrat minimum
-            recwork(sezer mi 1 argument jsem sinus)
-            -5^4 - co driv? ^ neresim unarni minus
-            pada priorita, zavorky jsou samost
-            lokalni ast, pamatuju, kam ho prippojit
-
-            priority - podle googlu sin sin 2 ^ 3 ^ 4 = sin(sin(2^(3^4)))
-            tj 2+2+2 = 2+(2+2) tj ctu aalespon stejne priority
-            ale 1/2/3 = (1/2)/3
-            takze dulezitejsi  je poradi vyhodnocovani
-        */
-
-        #endregion ?
-
         private static AST parser(List<Token> tokens)
         {
             Program.tokens = tokens;
@@ -192,17 +125,38 @@ namespace calc
             return ret;
         }
 
-        private static AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
-        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readUnary);
+        private static AST readAdd() => readSimpleBinaryOperator(Priority.Add, readUnary);
+        private static AST readMul() => readSimpleBinaryOperator(Priority.Mult, readFun);
         private static AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
+
+        private static AST readUnary()
+        {
+            bool signIsPlus = true;
+            while (curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Minus) signIsPlus ^= true;
+                else if (op == OperatorType.Plus) { }
+                else break;
+                curTokIdx++;
+            }
+
+            if (signIsPlus) return readMul();
+            else
+            {
+                return new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
+            }
+        }
 
         //sin cos 1^5
         //sin (1)^5 todo braces belong to sin
-        private static AST readUnary()
+        //todo max(3,5)
+        private static AST readFun()
         {
             AST ret = null;
             var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Unary).Select(x => x.Operator);
 
+            //read all unary + and -, then in ast prepend Minus and call readAdd
             if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
             {
                 var op = (OperatorType)curTok.Value;
@@ -220,18 +174,6 @@ namespace calc
         private static AST readFactor()
         {
             AST ret;
-            bool signIsPlus = true;
-            while (curTok.Type == TokenType.Operator)
-            {
-                var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Minus) signIsPlus ^= true;
-                else if (op == OperatorType.Plus) { }
-                else
-                {
-                    break;
-                }
-                curTokIdx++;
-            }
 
             if (curTok.Type == TokenType.Number)
             {
@@ -241,17 +183,8 @@ namespace calc
             else if (curTok.Type == TokenType.BraceOpen)
             {
                 ret = readBrace();
-            }/*
-            else if (curTok.Type == TokenType.Operator)
-            {
-                var funOp = curTok;
-                curTokIdx++;
-                ret = new AST(funOp, readFactor(), null);
-                new AST(new Token(TokenType.Operator, OperatorType.Star), ret, (decimal)1);
-            }*/
+            }
             else throw new ArithmeticException(ERROR);
-
-            if (!signIsPlus) ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), ret, null);
 
             return ret;
         }
