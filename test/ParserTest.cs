@@ -111,6 +111,23 @@ namespace test
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
 
+        [TestMethod]
+        public void Negative()
+        {
+            var input = new List<Token> {
+                new Token(TokenType.Number, toNum(8)),
+                new Token(TokenType.Operator, OperatorType.Caret),
+                new Token(TokenType.Operator, OperatorType.Caret),
+                new Token(TokenType.Number, toNum(3)),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            string expectedText = null;
+            var expectedVal = 0m;
+            Assert.AreEqual(res.Item1, expectedText);
+            Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+
 
     }
 }
