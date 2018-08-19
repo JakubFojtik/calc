@@ -50,27 +50,19 @@ namespace calc
             AST ret;
             ret = nextFun();
             var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
-            while (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
+            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
             {
                 var op = (OperatorType)curTok.Value;
-                if (operatorTypes.Contains(op))
+                curTokIdx++;
+                var operate = operatorImpls[op].getAST;
+                var operatorData = operators.Values.First(x => x.Operator == op);
+                if (operatorData.Associativity == Associativity.Left)
                 {
-                    curTokIdx++;
-                    var operate = operatorImpls[op].getAST;
-                    var operatorData = operators.Values.First(x => x.Operator == op);
-                    if (operatorData.Associativity == Associativity.Left)
-                    {
-                        ret = operate(ret, nextFun());
-                    }
-                    else
-                    {
-                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
-                    }
+                    ret = operate(ret, nextFun());
                 }
                 else
                 {
-                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
-                    break;
+                    ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
                 }
             }
             return ret;
