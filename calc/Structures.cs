@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace calc
 {
@@ -66,6 +67,9 @@ namespace calc
                         {
                             default: //binary op
                                 return defaultBinary(first, second);
+                            case OperatorType.Plus:
+                                if (second != null) return defaultBinary(first, second);
+                                else return first.Value;
                             case OperatorType.Minus:
                                 if (second != null) return defaultBinary(first, second);
                                 else return -1 * first.Value;
@@ -77,6 +81,41 @@ namespace calc
                     default:
                         throw new ArithmeticException(ERROR);
                 }
+            }
+
+            public string printDeriv()
+            {
+                var map = new Dictionary<int, AST>();
+                fillMap(this, map);
+                StringBuilder ret = new StringBuilder();
+                Func<AST, string> writeItem = item =>
+                 {
+                     if (item != null)
+                     {
+                         var val = item.value;
+                         if (val.Type == TokenType.Number) return val.ToString();
+                         else return map.First(x => x.Value.value == val).Key.ToString();
+                     }
+                     else return "";
+                 };
+                foreach (var item in map.OrderBy(x => x.Key))
+                {
+                    string first = writeItem(item.Value.left);
+                    string second = writeItem(item.Value.right);
+                    if (item.Value.value.Type != TokenType.Number)
+                    {
+                        ret.AppendLine(string.Format("{0}: {1} -> {2}, {3}", item.Key, item.Value.value, first, second));
+                    }
+                }
+                return ret.ToString();
+            }
+
+            private void fillMap(AST ast, Dictionary<int, AST> map)
+            {
+                int num = map.Count;
+                map.Add(num, ast);
+                if (ast.left != null) fillMap(ast.left, map);
+                if (ast.right != null) fillMap(ast.right, map);
             }
 
             public string printDFS(AST ast)
@@ -114,7 +153,7 @@ namespace calc
 
         }
 
-        public enum Priority { None = 0, Add, Mult, Unary, Pow, Brace } //brace mimo?
+        public enum Priority { None = 0, Add, Mult, Fun, Pow, Brace } //brace mimo?
 
         public enum Associativity { Left, Right }
 
@@ -128,8 +167,8 @@ namespace calc
             { "*",    (TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  ) },
             { "/",    (TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  ) },
             { "^",    (TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right ) },
-            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Unary, Associativity.Right  ) },
-            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Unary, Associativity.Right  ) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Fun, Associativity.Right  ) },
+            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Fun, Associativity.Right  ) },
         };
         public static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
             = new Dictionary<OperatorType, (Func<AST, AST, AST>, Func<decimal, decimal, decimal>)>

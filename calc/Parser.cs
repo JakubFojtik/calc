@@ -76,12 +76,66 @@ namespace calc
             return ret;
         }
 
-        private AST readAdd() => readSimpleBinaryOperator(Priority.Add, readUnary);
+        private AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
         private AST readMul() => readSimpleBinaryOperator(Priority.Mult, readFun);
         private AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
 
-        private AST readUnary()
+        //sin cos 1^5
+        //sin (1)^5 todo braces belong to sin
+        //todo max(3,5)
+        private AST readFun()
         {
+            AST ret = null;
+            var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Fun).Select(x => x.Operator);
+
+            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
+            {
+                var op = (OperatorType)curTok.Value;
+                curTokIdx++;
+                var operate = operatorImpls[op].getAST;
+                ret = operate(readFun(), null);
+            }
+            else
+            {
+                ret = readPow();
+            }
+            return ret;
+        }
+
+        //Fac->-+Mul | Cislo | (Add)
+        private AST readFactor()
+        {
+            AST ret;
+
+            if (curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Minus)
+                {
+                    curTokIdx++;
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
+                }
+                else if (op == OperatorType.Plus)
+                {
+                    curTokIdx++;
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readMul(), null);
+                }
+                else throw new ArithmeticException(ERROR);
+            }
+            else if (curTok.Type == TokenType.Number)
+            {
+                ret = new AST(curTok);
+                curTokIdx++;
+            }
+            else if (curTok.Type == TokenType.BraceOpen)
+            {
+                ret = readBrace();
+            }
+            else throw new ArithmeticException(ERROR);
+
+            return ret;
+
+            /*
             bool signIsPlus = true;
             while (curTok.Type == TokenType.Operator)
             {
@@ -97,47 +151,7 @@ namespace calc
             {
                 return new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
             }
-        }
-
-        //sin cos 1^5
-        //sin (1)^5 todo braces belong to sin
-        //todo max(3,5)
-        private AST readFun()
-        {
-            AST ret = null;
-            var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Unary).Select(x => x.Operator);
-
-            //read all unary + and -, then in ast prepend Minus and call readAdd
-            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
-            {
-                var op = (OperatorType)curTok.Value;
-                curTokIdx++;
-                var operate = operatorImpls[op].getAST;
-                ret = operate(readUnary(), null);
-            }
-            else
-            {
-                ret = readPow();
-            }
-            return ret;
-        }
-
-        private AST readFactor()
-        {
-            AST ret;
-
-            if (curTok.Type == TokenType.Number)
-            {
-                ret = new AST(curTok);
-                curTokIdx++;
-            }
-            else if (curTok.Type == TokenType.BraceOpen)
-            {
-                ret = readBrace();
-            }
-            else throw new ArithmeticException(ERROR);
-
-            return ret;
+            */
         }
 
         private AST readBrace()

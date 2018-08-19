@@ -22,7 +22,7 @@ namespace calc
                 Console.WriteLine("Parser:");
                 var parser = new Parser();
                 AST ast = parser.parser(tokens);
-                Console.WriteLine(ast.printDFS(ast));
+                Console.WriteLine(ast.printDeriv());
                 Console.WriteLine();
                 Console.WriteLine("Result: " + ast.compute());
 
