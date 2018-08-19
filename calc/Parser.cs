@@ -7,7 +7,7 @@ using static calc.Strutures;
 
 namespace calc
 {
-    class Parser
+    public class Parser
     {
         private List<Token> tokens;
         private int curTokIdx;

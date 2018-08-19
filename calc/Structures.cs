@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace calc
 {
-    class Strutures
+    public class Strutures
     {
         public enum TokenType { BraceOpen, BraceClose, Number, Operator, EOF }
         public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, ASin, Caret }
@@ -78,6 +78,40 @@ namespace calc
                         throw new ArithmeticException(ERROR);
                 }
             }
+
+            public string printDFS(AST ast)
+            {
+                var str = ast.value + " ";
+                if (ast.left != null) str += printDFS(ast.left);
+                if (ast.right != null) str += printDFS(ast.right);
+                return str;
+            }
+
+            public void printBFS(AST ast)
+            {
+                Queue<AST> q = new Queue<AST>();
+                q.Enqueue(ast);
+                int numItems = 1;
+                while (q.Count > 0)
+                {
+                    AST item = q.Dequeue();
+                    Console.Write(item.value + " ");
+                    numItems--;
+                    AST nextItem = item.left;
+                    if (nextItem != null)
+                    {
+                        q.Enqueue(nextItem);
+                        numItems++;
+                    }
+                    nextItem = item.right;
+                    if (nextItem != null)
+                    {
+                        q.Enqueue(nextItem);
+                        numItems++;
+                    }
+                }
+            }
+
         }
 
         public enum Priority { None = 0, Add, Mult, Unary, Pow, Brace } //brace mimo?

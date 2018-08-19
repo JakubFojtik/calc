@@ -8,7 +8,7 @@ using static calc.Strutures;
 
 namespace calc
 {
-    class Lexer
+    public class Lexer
     {
         public enum State { Empty, Number, Operator }
 
