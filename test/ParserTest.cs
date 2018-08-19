@@ -14,6 +14,7 @@ namespace test
             var parser = new Parser();
             var res = parser.parser(input);
             var str = res.printDFS(res);
+            if (parser.error) throw new AssertFailedException("Did not parser all.");
             return (str, res.compute());
         }
 
@@ -32,8 +33,13 @@ namespace test
         {
             var input = new List<Token> {
                 new Token(TokenType.Operator, OperatorType.Minus),
+                new Token(TokenType.Number, toNum(3)),
+                new Token(TokenType.Operator, OperatorType.Plus),
+                new Token(TokenType.Number, toNum(3)),
+                new Token(TokenType.Operator, OperatorType.Minus),
                 new Token(TokenType.Number, toNum(99)),
                 new Token(TokenType.Operator, OperatorType.Star),
+                new Token(TokenType.Operator, OperatorType.Minus),
                 new Token(TokenType.Number, toNum(3)),
                 new Token(TokenType.Operator, OperatorType.Minus),
                 new Token(TokenType.Operator, OperatorType.Minus),
@@ -43,8 +49,8 @@ namespace test
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Minus) Operator(Star) Number(99) Number(3) Operator(Minus) Operator(Minus) Operator(Sin) Number(7) ";
-            var expectedVal = -297.65698m;
+            var expectedText = "Operator(Minus) Operator(Minus) Operator(Plus) Operator(Minus) Number(3) Number(3) Operator(Star) Number(99) Operator(Minus) Number(3) Operator(Minus) Operator(Minus) Operator(Sin) Number(7) ";
+            var expectedVal = 296.34301m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
