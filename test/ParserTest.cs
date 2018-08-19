@@ -52,7 +52,7 @@ namespace test
             };
             string str = null;
             try { str = parse(input); } catch { }
-            var expected = "";
+            var expected = "Operator(Minus) Operator(Minus) Operator(Star) Operator(Sin) Number(99) Operator(Minus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
             Assert.AreEqual(str, expected);
         }
     }
