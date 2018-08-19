@@ -107,23 +107,8 @@ namespace calc
             { OperatorType.Caret, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Caret), a, b), (a, b) => (decimal)Math.Pow((double)a, (double)b)) },
             { OperatorType.Sin,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Sin((double)a)) },
         };
-        //Prefix enumeration of all operators.
-        public static string[] _operatorPrefixes;
+
         public static readonly string ERROR = "Mat chyba";
-
-        public static string[] operatorPrefixes
-        {
-            get
-            {
-                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
-                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
-
-                return _operatorPrefixes
-                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
-            }
-        }
-
-        public static char[] decSeps = { ',', '.' };
 
     }
 }

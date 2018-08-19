@@ -12,7 +12,7 @@ namespace calc
     {
         public enum State { Empty, Number, Operator }
 
-        public static List<Token> lexer(string input)
+        public List<Token> lexer(string input)
         {
             List<Token> tokens = new List<Token>();
             string buffer = "";
@@ -75,13 +75,13 @@ namespace calc
             return tokens;
         }
 
-        static bool isNumeric(string buffer)
+        bool isNumeric(string buffer)
         {
             return !string.IsNullOrWhiteSpace(buffer) && areAllCharsNumeric(buffer);
             //     && buffer.Count(x => decSeps.Contains(x)) <= 1;   aby ... nebylo 0 0 0 tak je tecka "cislici"-soucasti cisla
         }
 
-        private static bool areAllCharsNumeric(string buffer)
+        private bool areAllCharsNumeric(string buffer)
         {
             foreach (var c in buffer)
             {
@@ -90,7 +90,24 @@ namespace calc
             return true;
         }
 
-        private static bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
+        private bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
+
+        //Prefix enumeration of all operators.
+        public string[] _operatorPrefixes;
+
+        public string[] operatorPrefixes
+        {
+            get
+            {
+                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
+                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
+
+                return _operatorPrefixes
+                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
+            }
+        }
+
+        public char[] decSeps = { ',', '.' };
 
     }
 }
