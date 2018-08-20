@@ -79,6 +79,8 @@ namespace test
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
 
+        //-sin-8*-3
+        //-((sin-8)*(-3))
         [TestMethod]
         public void Harder()
         {

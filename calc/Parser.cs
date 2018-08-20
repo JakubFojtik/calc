@@ -38,13 +38,21 @@ namespace calc
 
         //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
         //SCIT -> SCIT + NAS | NAS
-        //NAS -> NAS * MOC | MOC
-        //MOC -> CISLO ^ MOC | CISLO
-        //CISLO -> cislo | (SCIT)
-        //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps
-        //funkce? FUN -> ONEFUN FUN | MOC, ONEFUN -> sin | asin
+        //NAS -> NAS * FUN | FUN
+        //FUN -> Fun FUN | MOC
+        //MOC -> FUNB ^ MOC | FUNB
+        //FUNB -> Fun(SCIT) | CISLO
+        //CISLO -> -NAS | cislo | (SCIT)
+        //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps posere levou asociativitu => list iteration
         private AST readAll() => readAdd();
 
+        //LeftAssoc
+        //???
+        //RightAssoc
+        //Op->NOp Rest
+        //Rest-> ? Op | e
+
+        //LL parser cannot preserve left associativity when removing left recursion, unless iteration is used.
         private AST readSimpleBinaryOperator(Priority priority, Func<AST> nextFun)
         {
             AST ret;
@@ -102,7 +110,6 @@ namespace calc
             return ret;
         }
 
-        //Fac->-+Mul | Cislo | (Add)
         private AST readFactor()
         {
             AST ret;
@@ -134,24 +141,6 @@ namespace calc
             else throw new ArithmeticException(ERROR);
 
             return ret;
-
-            /*
-            bool signIsPlus = true;
-            while (curTok.Type == TokenType.Operator)
-            {
-                var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Minus) signIsPlus ^= true;
-                else if (op == OperatorType.Plus) { }
-                else break;
-                curTokIdx++;
-            }
-
-            if (signIsPlus) return readMul();
-            else
-            {
-                return new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
-            }
-            */
         }
 
         private AST readBrace()
