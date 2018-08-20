@@ -1,7 +1,5 @@
-/.vs
-/calc/obj
-/calc/bin
-/test/obj
-/test/bin
-/TestResults
-/packages
+.vs
+TestResults
+packages
+obj
+bin
