@@ -26,7 +26,7 @@ namespace regexp
                 }
 
                 buffer += c;
-                if (isOperator(buffer)) tokens.Add(new Token(operators[buffer].Token, operators[buffer].Operator));
+                if (isOperator(buffer)) tokens.Add(new Token(TokenType.Operator, operators[buffer]));
                 else tokens.Add(new Token(TokenType.Char, buffer));
                 buffer = "";
             }

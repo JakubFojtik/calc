@@ -7,7 +7,7 @@ namespace regexp
 {
     public class Strutures
     {
-        public enum TokenType { BraceOpen, BraceClose, Char, Operator, EOF }
+        public enum TokenType { Char, Operator, EOF }
         public enum OperatorType
         {
             None,
@@ -168,18 +168,18 @@ namespace regexp
         }
         */
 
-        public static Dictionary<string, (TokenType Token, OperatorType Operator)> operators
-            = new Dictionary<string, (TokenType, OperatorType)>
+        public static Dictionary<string, OperatorType> operators
+            = new Dictionary<string, OperatorType>
         {
-            { "(",    (TokenType.BraceOpen,  OperatorType.CBraceOpen   ) },
-            { ")",    (TokenType.BraceClose, OperatorType.CBraceClose   ) },
-            { "[",    (TokenType.BraceOpen,  OperatorType.EBraceOpen   ) },
-            { "]",    (TokenType.BraceClose, OperatorType.EBraceClose   ) },
-            { "*",    (TokenType.Operator,   OperatorType.Star   ) },
-            { ".",    (TokenType.Operator,   OperatorType.Dot    ) },
-            { "^",    (TokenType.Operator,   OperatorType.Caret  ) },
-            { "$",    (TokenType.Operator,   OperatorType.Dollar ) },
-            { "|",    (TokenType.Operator,   OperatorType.Or ) },
+            { "(",  OperatorType.CBraceOpen  },
+            { ")",  OperatorType.CBraceClose },
+            { "[",  OperatorType.EBraceOpen  },
+            { "]",  OperatorType.EBraceClose },
+            { "*",  OperatorType.Star        },
+            { ".",  OperatorType.Dot         },
+            { "^",  OperatorType.Caret       },
+            { "$",  OperatorType.Dollar      },
+            { "|",  OperatorType.Or          },
         };
         /*
         public static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls

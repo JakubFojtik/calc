@@ -73,7 +73,7 @@ namespace test
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Minus) Operator(Star) Operator(Sin) Number(99) Operator(Minus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
+            var expectedText = "Operator(Minus) Operator(Star) Operator(Minus) Operator(Sin) Number(99) Operator(Minus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
             var expectedVal = -2.62540m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -95,7 +95,8 @@ namespace test
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Star) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
+            //var expectedText = "Operator(Minus) Operator(Star) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
+            var expectedText = "Operator(Star) Operator(Minus) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
             var expectedVal = -2.96807m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
