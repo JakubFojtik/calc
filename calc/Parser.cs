@@ -120,12 +120,12 @@ namespace calc
                 if (op == OperatorType.Minus)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readFun(), null);
                 }
                 else if (op == OperatorType.Plus)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readMul(), null);
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readFun(), null);
                 }
                 else throw new ArithmeticException(ERROR);
             }

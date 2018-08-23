@@ -24,7 +24,8 @@ namespace calc
                 AST ast = parser.parser(tokens);
                 Console.WriteLine(ast.printDeriv());
                 Console.WriteLine();
-                Console.WriteLine("Result: " + ast.compute());
+                var res = ast.compute();
+                Console.WriteLine("Result: " + res + " = " + res.ToString("e"));
 
                 if (parser.error) Console.WriteLine("Error: Did not process all tokens.");
             }
