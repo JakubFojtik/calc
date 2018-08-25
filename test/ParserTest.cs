@@ -123,6 +123,27 @@ namespace test
         }
 
         [TestMethod]
+        public void Hardererer()
+        {
+            var input = new List<Token> {
+                new Token(TokenType.Operator, OperatorType.Minus),
+                new Token(TokenType.Number, toNum(1)),
+                new Token(TokenType.Operator, OperatorType.Star),
+                new Token(TokenType.Number, toNum(2)),
+                new Token(TokenType.Operator, OperatorType.Caret),
+                new Token(TokenType.Operator, OperatorType.Sin),
+                new Token(TokenType.Operator, OperatorType.Minus),
+                new Token(TokenType.Number, toNum(3)),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            var expectedText = "Operator(Star) Operator(Minus) Number(1) Operator(Caret) Number(2) Operator(Sin) Operator(Minus) Number(3) ";
+            var expectedVal = -0.90681m;
+            Assert.AreEqual(expectedText, res.Item1);
+            Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+
+        [TestMethod]
         public void Negative()
         {
             var input = new List<Token> {

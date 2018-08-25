@@ -85,47 +85,33 @@ namespace calc
         }
 
         private AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
-        private AST readMul() => readSimpleBinaryOperator(Priority.Mult, readFun);
+        private AST readMul() => readSimpleBinaryOperator(Priority.Mult, readPow);
         private AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
-
-        //sin cos 1^5
-        //sin (1)^5 todo braces belong to sin
-        //todo max(3,5)
-        private AST readFun()
-        {
-            AST ret = null;
-            var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Fun).Select(x => x.Operator);
-
-            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
-            {
-                var op = (OperatorType)curTok.Value;
-                curTokIdx++;
-                var operate = operatorImpls[op].getAST;
-                ret = operate(readFun(), null);
-            }
-            else
-            {
-                ret = readPow();
-            }
-            return ret;
-        }
 
         private AST readFactor()
         {
             AST ret;
 
-            if (curTok.Type == TokenType.Operator)
+            if (curTok.Type == TokenType.Operator)  //cist vsechny unarni opy, i fce
             {
+                var functions = operators.Values.Where(x => x.Priority == Priority.Fun).Select(x => x.Operator);
+
                 var op = (OperatorType)curTok.Value;
                 if (op == OperatorType.Minus)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readFun(), null);
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readPow(), null);
                 }
                 else if (op == OperatorType.Plus)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readFun(), null);
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readPow(), null);
+                }
+                else if (functions.Contains(op))
+                {
+                    curTokIdx++;
+                    var operate = operatorImpls[op].getAST;
+                    ret = operate(readPow(), null);
                 }
                 else throw new ArithmeticException(ERROR);
             }
