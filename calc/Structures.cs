@@ -7,8 +7,11 @@ namespace calc
 {
     public class Strutures
     {
-        public enum TokenType { BraceOpen, BraceClose, Number, Operator, EOF }
-        public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, ASin, Caret }
+        public enum TokenType { BraceOpen, BraceClose, Number, Operator, Constant, EOF }
+        public enum OperatorType { None, Plus, Minus, Star, Slash, Sin, ASin, Caret,
+            Sqrt,
+            Pi
+        }
 
         public class Token
         {
@@ -24,7 +27,7 @@ namespace calc
             public override string ToString() => string.Format("{0}({1})", Type, Value);
         }
 
-        public enum Priority { None = 0, Add, Mult, Fun, Pow, Brace } //brace mimo?
+        public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
 
         public enum Associativity { Left, Right }
 
@@ -34,12 +37,14 @@ namespace calc
             { "(",    (TokenType.BraceOpen,  OperatorType.None,  Priority.Brace, Associativity.Right ) },
             { ")",    (TokenType.BraceClose, OperatorType.None,  Priority.Brace, Associativity.Left  ) },
             { "+",    (TokenType.Operator,   OperatorType.Plus,  Priority.Add,   Associativity.Left  ) },
-            { "-",    (TokenType.Operator,   OperatorType.Minus, Priority.Add,   Associativity.Left  ) }, //dynamic
+            { "-",    (TokenType.Operator,   OperatorType.Minus, Priority.Add,   Associativity.Left  ) },
             { "*",    (TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  ) },
             { "/",    (TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  ) },
             { "^",    (TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right ) },
-            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Fun, Associativity.Right  ) },
-            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Fun, Associativity.Right  ) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Fun,   Associativity.Right ) },
+            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Fun,   Associativity.Right ) },
+            { "sqrt", (TokenType.Operator,   OperatorType.Sqrt,  Priority.Fun,   Associativity.Right ) },
+            { "pi",   (TokenType.Constant,   OperatorType.Pi,    Priority.Fun,   Associativity.Left  ) },
         };
         public static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
             = new Dictionary<OperatorType, (Func<AST, AST, AST>, Func<decimal, decimal, decimal>)>
@@ -49,7 +54,10 @@ namespace calc
             { OperatorType.Star,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Star ), a, b), (a, b) => a * b) },
             { OperatorType.Slash, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Slash), a, b), (a, b) => a / b) },
             { OperatorType.Caret, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Caret), a, b), (a, b) => (decimal)Math.Pow((double)a, (double)b)) },
-            { OperatorType.Sin,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Sin((double)a)) },
+            { OperatorType.Sin,    ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Sin((double)a)) },
+            { OperatorType.ASin,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Asin((double)a)) },
+            { OperatorType.Sqrt,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sqrt), a, b), (a, b) => (decimal)Math.Sqrt((double)a)) },
+            { OperatorType.Pi,     ((a, b) => new AST(new Token(TokenType.Constant, OperatorType.Pi), a, b), (a, b) => (decimal)Math.PI) },
         };
 
         public static readonly string ERROR = "Mat chyba";

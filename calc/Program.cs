@@ -17,7 +17,7 @@ namespace calc
 
                 var lexer = new Lexer();
                 List<Token> tokens = lexer.lexer(input);
-                Console.WriteLine("Lexer: " + string.Join(", ", tokens));
+                //Console.WriteLine("Lexer: " + string.Join(", ", tokens));
 
                 Console.WriteLine("Parser:");
                 var parser = new Parser();

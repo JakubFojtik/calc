@@ -120,6 +120,11 @@ namespace calc
                 ret = new AST(curTok);
                 curTokIdx++;
             }
+            else if (curTok.Type == TokenType.Constant)
+            {
+                ret = new AST(curTok);
+                curTokIdx++;
+            }
             else if (curTok.Type == TokenType.BraceOpen)
             {
                 ret = readBrace();

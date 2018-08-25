@@ -9,6 +9,7 @@ namespace test
     [TestClass]
     public class LexerTest
     {
+        /*
         [TestMethod]
         public void Lexer()
         {
@@ -19,5 +20,6 @@ namespace test
             var expected = "Operator(Minus);Number(55);Operator(Star);Number(61);Operator(Minus);BraceOpen(None);Operator(Minus);Operator(Sin);Number(3);Operator(Caret);Number(4);BraceClose(None);Operator(Slash);Number(5)";
             Assert.AreEqual(str, expected);
         }
+        */
     }
 }

@@ -31,23 +31,24 @@ namespace calc
             {
                 case TokenType.Number:
                     return (decimal)value.Value;    //todo convert or generic type
+                case TokenType.Constant:
                 case TokenType.Operator:
                     var opType = (OperatorType)value.Value;
                     decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType].getDecimal(first.Value, second.Value);
+                    decimal defaultUnary(decimal? left) => operatorImpls[opType].getDecimal(first.Value, 0);
+                    decimal defaultConstant() => operatorImpls[opType].getDecimal(0, 0);
                     switch (opType)
                     {
-                        default: //binary op
-                            return defaultBinary(first, second);
+                        default:
+                            if (first == null) return defaultConstant();
+                            else if (second == null) return defaultUnary(first);
+                            else return defaultBinary(first, second); 
                         case OperatorType.Plus:
                             if (second != null) return defaultBinary(first, second);
                             else return first.Value;
                         case OperatorType.Minus:
                             if (second != null) return defaultBinary(first, second);
                             else return -1 * first.Value;
-                        case OperatorType.Sin:
-                            return (decimal)Math.Sin((double)first.Value);
-                        case OperatorType.ASin:
-                            return (decimal)Math.Asin((double)first.Value);
                     }
                 default:
                     throw new ArithmeticException(ERROR);
