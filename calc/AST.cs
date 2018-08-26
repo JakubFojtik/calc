@@ -60,12 +60,13 @@ namespace calc
             var map = new Dictionary<int, AST>();
             fillMap(this, map);
             StringBuilder ret = new StringBuilder();
+            var numberTypes = new List<TokenType> { TokenType.Number, TokenType.Constant };
             Func<AST, string> writeItem = item =>
             {
                 if (item != null)
                 {
                     var val = item.value;
-                    if (val.Type == TokenType.Number) return val.ToString();
+                    if (numberTypes.Contains(val.Type)) return val.ToString();
                     else return map.First(x => x.Value.value == val).Key.ToString();
                 }
                 else return "";
@@ -76,7 +77,7 @@ namespace calc
                 if (removed.Contains(item.Key)) continue;
                 string first = writeItem(item.Value.left);
                 string second = writeItem(item.Value.right);
-                if (item.Value.value.Type != TokenType.Number)
+                if (!numberTypes.Contains(item.Value.value.Type))
                 {
                     ret.AppendLine(string.Format("{0}: {1} -> {2}, {3}", item.Key, item.Value.value, first, second));
                 }
