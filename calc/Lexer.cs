@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static calc.Token;
 
 namespace calc
@@ -56,7 +54,7 @@ namespace calc
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                if (c == ' ')
+                if (char.IsWhiteSpace(c))
                 {
                     finalizeBuffer();
                     continue;
