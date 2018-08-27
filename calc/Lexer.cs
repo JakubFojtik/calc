@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using static calc.ConstantToken;
 using static calc.OperatorToken;
 
 namespace calc
@@ -21,12 +22,18 @@ namespace calc
             { "sin",   OperatorType.Sin  },
             { "asin",  OperatorType.ASin },
             { "sqrt",  OperatorType.Sqrt },
-            { "pi",    OperatorType.Pi },//do number.origval
+        };
+
+        public static Dictionary<string, ConstantType> constants
+            = new Dictionary<string, ConstantType>
+        {
+            { "pi",    ConstantType.Pi },
+            { "e",     ConstantType.E },
         };
 
         public char[] decSeps = { ',', '.' };
 
-        public enum State { Empty, Number, Operator }
+        public enum State { Empty, Number, OperatorOrConstant }
 
         public List<Token> lexer(string input)
         {
@@ -46,6 +53,7 @@ namespace calc
                     tokens.Add(new NumberToken(Convert.ToDecimal(buffer)));
                 }
                 else if (operators.ContainsKey(buffer)) tokens.Add(new OperatorToken(operators[buffer]));
+                else if (constants.ContainsKey(buffer)) tokens.Add(new ConstantToken(constants[buffer]));
                 else throw new InvalidOperationException("badbuffer");
 
                 void setEmpty() { buffer = ""; state = State.Empty; }
@@ -65,7 +73,7 @@ namespace calc
                 {
                     case State.Empty:
                         buffer += c;
-                        state = isNumeric(buffer) ? State.Number : State.Operator;
+                        state = isNumeric(buffer) ? State.Number : State.OperatorOrConstant;
                         break;
                     case State.Number:
                         if (isNumeric(buffer + c)) buffer += c;
@@ -75,8 +83,8 @@ namespace calc
                             i--;
                         }
                         break;
-                    case State.Operator:
-                        if (isOperatorPrefix(buffer + c)) buffer += c;
+                    case State.OperatorOrConstant:
+                        if (isOperatorPrefix(buffer + c) || isConstantPrefix(buffer + c)) buffer += c;
                         else
                         {
                             finalizeBuffer();
@@ -113,8 +121,23 @@ namespace calc
 
         private bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
 
-        //Prefix enumeration of all operators.
+        private bool isConstantPrefix(string buffer) => constantPrefixes.Contains(buffer);
+
+        //Prefix enumerations of all operators and constants.
         public string[] _operatorPrefixes;
+        public string[] _constantPrefixes;
+
+        public string[] constantPrefixes
+        {
+            get
+            {
+                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
+                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
+
+                return _constantPrefixes
+                    ?? (_constantPrefixes = constants.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
+            }
+        }
 
         public string[] operatorPrefixes
         {

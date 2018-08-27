@@ -8,7 +8,7 @@ namespace calc
 {
     public class AST
     {
-        public readonly string ERROR = "AST chyba";
+        public static readonly string ERROR = "AST chyba";
 
         public static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
             = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
@@ -21,7 +21,6 @@ namespace calc
             { OperatorType.Sin,    (a, b) => (decimal)Math.Sin((double)a)            },
             { OperatorType.ASin,   (a, b) => (decimal)Math.Asin((double)a)           },
             { OperatorType.Sqrt,   (a, b) => (decimal)Math.Sqrt((double)a)           },
-            { OperatorType.Pi,     (a, b) => (decimal)Math.PI                        },
         };
 
         public Token value;
@@ -44,21 +43,24 @@ namespace calc
             var second = right?.compute();
             OperatorToken opToken;
             NumberToken numToken;
+            ConstantToken conToken;
             if ((numToken = value as NumberToken) != null)
             {
                 return numToken.Value;
+            }
+            else if ((conToken = value as ConstantToken) != null)
+            {
+                return conToken.Value;
             }
             else if ((opToken = value as OperatorToken) != null)
             {
                 var opType = opToken.Operator;
                 decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType](first.Value, second.Value);
                 decimal defaultUnary(decimal? left) => operatorImpls[opType](first.Value, 0);
-                decimal defaultConstant() => operatorImpls[opType](0, 0);
                 switch (opType)
                 {
                     default:
-                        if (first == null) return defaultConstant();
-                        else if (second == null) return defaultUnary(first);
+                        if (second == null) return defaultUnary(first);
                         else return defaultBinary(first, second);
                     case OperatorType.Plus:
                         if (second != null) return defaultBinary(first, second);

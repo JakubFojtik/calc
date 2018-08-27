@@ -6,7 +6,7 @@ namespace calc
     {
         public enum OperatorType
         {
-            None, BraceOpen, BraceClose, Plus, Minus, Star, Slash, Sin, ASin, Caret, Sqrt, Pi
+            BraceOpen, BraceClose, Plus, Minus, Star, Slash, Sin, ASin, Caret, Sqrt
         }
 
         public OperatorType Operator { get; private set; }
@@ -22,7 +22,7 @@ namespace calc
 
         //public Priority Priority => operatorsByPriority[]
 
-        public override bool HasOperands() => Operator != OperatorType.Pi; //todo gener
+        public override bool HasOperands() => true;
 
         public override string ToString()
         {

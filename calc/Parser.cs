@@ -7,7 +7,7 @@ namespace calc
 {
     public class Parser
     {
-        public readonly string ERROR = "Mat chyba";
+        public static readonly string ERROR = "Mat chyba";
 
         public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
 
@@ -24,7 +24,6 @@ namespace calc
                 ( Priority.Fun,  OperatorType.Sin   ),
                 ( Priority.Fun,  OperatorType.ASin  ),
                 ( Priority.Fun,  OperatorType.Sqrt  ),
-                ( Priority.Fun,  OperatorType.Pi    ),
             }.ToLookup(x => x.Priority, x => x.OperatorType);
 
         private List<Token> tokens;
@@ -112,6 +111,7 @@ namespace calc
             AST ret;
             OperatorToken opToken;
             NumberToken numToken;
+            ConstantToken conToken;
             if ((opToken = curTok as OperatorToken) != null)
             {
                 var functions = operatorsByPriority[Priority.Fun];
@@ -132,16 +132,16 @@ namespace calc
                 {
                     ret = readBrace();
                 }
-                else if (op == OperatorType.Pi)//todo generalize
-                {
-                    ret = new AST(opToken);
-                    curTokIdx++;
-                }
                 else throw new ArithmeticException(ERROR);
             }
             else if ((numToken = curTok as NumberToken) != null)
             {
                 ret = new AST(numToken);
+                curTokIdx++;
+            }
+            else if ((conToken = curTok as ConstantToken) != null)
+            {
+                ret = new AST(conToken);
                 curTokIdx++;
             }
             else throw new ArithmeticException(ERROR);
