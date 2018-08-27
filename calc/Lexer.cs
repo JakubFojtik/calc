@@ -4,12 +4,28 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static calc.Strutures;
+using static calc.Token;
 
 namespace calc
 {
     public class Lexer
     {
+        public static Dictionary<string, (TokenType Token, OperatorType Operator)> operators
+            = new Dictionary<string, (TokenType, OperatorType)>
+        {
+            { "(",    (TokenType.BraceOpen,  OperatorType.None) },
+            { ")",    (TokenType.BraceClose, OperatorType.None) },
+            { "+",    (TokenType.Operator,   OperatorType.Plus) },
+            { "-",    (TokenType.Operator,   OperatorType.Minus) },
+            { "*",    (TokenType.Operator,   OperatorType.Star) },
+            { "/",    (TokenType.Operator,   OperatorType.Slash) },
+            { "^",    (TokenType.Operator,   OperatorType.Caret) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ) },
+            { "asin", (TokenType.Operator,   OperatorType.ASin) },
+            { "sqrt", (TokenType.Operator,   OperatorType.Sqrt) },
+            { "pi",   (TokenType.Constant,   OperatorType.Pi) },//do number.origval
+        };
+
         public enum State { Empty, Number, Operator }
 
         public List<Token> lexer(string input)

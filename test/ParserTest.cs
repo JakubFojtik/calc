@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using calc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static calc.Strutures;
+using static calc.Token;
 
 namespace test
 {

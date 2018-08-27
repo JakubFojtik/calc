@@ -3,12 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static calc.Strutures;
+using static calc.Token;
 
 namespace calc
 {
     public class AST
     {
+        public readonly string ERROR = "AST chyba";
+
+        public static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
+            = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
+        {
+            { OperatorType.Plus,   (a, b) => a + b                                   },
+            { OperatorType.Minus,  (a, b) => a - b                                   },
+            { OperatorType.Star,   (a, b) => a * b                                   },
+            { OperatorType.Slash,  (a, b) => a / b                                   },
+            { OperatorType.Caret,  (a, b) => (decimal)Math.Pow((double)a, (double)b) },
+            { OperatorType.Sin,    (a, b) => (decimal)Math.Sin((double)a)            },
+            { OperatorType.ASin,   (a, b) => (decimal)Math.Asin((double)a)           },
+            { OperatorType.Sqrt,   (a, b) => (decimal)Math.Sqrt((double)a)           },
+            { OperatorType.Pi,     (a, b) => (decimal)Math.PI                        },
+        };
+
         public Token value;
         public AST left;
         public AST right;
@@ -34,9 +50,9 @@ namespace calc
                 case TokenType.Constant:
                 case TokenType.Operator:
                     var opType = (OperatorType)value.Value;
-                    decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType].getDecimal(first.Value, second.Value);
-                    decimal defaultUnary(decimal? left) => operatorImpls[opType].getDecimal(first.Value, 0);
-                    decimal defaultConstant() => operatorImpls[opType].getDecimal(0, 0);
+                    decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType](first.Value, second.Value);
+                    decimal defaultUnary(decimal? left) => operatorImpls[opType](first.Value, 0);
+                    decimal defaultConstant() => operatorImpls[opType](0, 0);
                     switch (opType)
                     {
                         default:
@@ -51,7 +67,7 @@ namespace calc
                             else return -1 * first.Value;
                     }
                 default:
-                    throw new ArithmeticException(ERROR);
+                    throw new InvalidOperationException(ERROR);
             }
         }
 

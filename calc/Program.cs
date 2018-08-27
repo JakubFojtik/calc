@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using static calc.Strutures;
+using static calc.Token;
 
 namespace calc
 {

@@ -3,12 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static calc.Strutures;
+using static calc.Token;
 
 namespace calc
 {
     public class Parser
     {
+        public readonly string ERROR = "Mat chyba";
+
+        public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
+
+        public enum Associativity { Left, Right }
+
+        public Associativity operatorAssoc(OperatorType op) => op == OperatorType.Caret ? Associativity.Right : Associativity.Left;
+
+        public ILookup<Priority, OperatorType> operatorsByPriority
+            = new (Priority Priority, OperatorType OperatorType)[]
+            {
+                ( Priority.Add,  OperatorType.Plus  ),
+                ( Priority.Add,  OperatorType.Minus ),
+                ( Priority.Mult, OperatorType.Star  ),
+                ( Priority.Mult, OperatorType.Slash ),
+                ( Priority.Pow,  OperatorType.Caret ),
+                ( Priority.Fun,  OperatorType.Sin   ),
+                ( Priority.Fun,  OperatorType.ASin  ),
+                ( Priority.Fun,  OperatorType.Sqrt  ),
+                ( Priority.Fun,  OperatorType.Pi    ),
+            }.ToLookup(x => x.Priority, x => x.OperatorType);
+
         private List<Token> tokens;
         private int curTokIdx;
         private Token curTok => tokens.ElementAtOrDefault(curTokIdx) ?? new Token(TokenType.EOF);
@@ -57,15 +79,15 @@ namespace calc
         {
             AST ret;
             ret = nextFun();
-            var operatorTypes = operatorImpls.Where(x => x.Value.Priority == priority).Select(x => x.Key);
-            while (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
+            var operatorTypes = operatorsByPriority[priority];
+            while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
                 if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
                     Func<AST, AST, AST> operate = (a, b) => new AST(new Token(TokenType.Operator, op), a, b);
-                    if (operatorImpls[op].Associativity == Associativity.Left)
+                    if (operatorAssoc(op) == Associativity.Left)
                     {
                         ret = operate(ret, nextFun());
                     }
@@ -76,7 +98,6 @@ namespace calc
                 }
                 else
                 {
-                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
                     break;
                 }
             }
@@ -93,7 +114,7 @@ namespace calc
 
             if (curTok.Type == TokenType.Operator)  //cist vsechny unarni opy, i fce
             {
-                var functions = operatorImpls.Where(x => x.Value.Priority == Priority.Fun).Select(x => x.Key);
+                var functions = operatorsByPriority[Priority.Fun];
 
                 var op = (OperatorType)curTok.Value;
                 if (op == OperatorType.Minus)
