@@ -81,10 +81,12 @@ namespace calc
             while ((opToken = curTok as OperatorToken) != null)
             {
                 var op = opToken.Operator;
+                var newOp = op;
+                if (priority == Priority.Add) newOp = op == OperatorType.Minus ? OperatorType.BinMinus : OperatorType.BinPlus;
                 if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
-                    Func<AST, AST, AST> operate = (a, b) => new AST(new OperatorToken(op), a, b);
+                    Func<AST, AST, AST> operate = (a, b) => new AST(new OperatorToken(newOp), a, b);
                     if (opToken.Associativity == Associativity.Left)
                     {
                         ret = operate(ret, nextFun());
@@ -120,13 +122,13 @@ namespace calc
                 if (op == OperatorType.Minus || op == OperatorType.Plus)
                 {
                     curTokIdx++;
-                    ret = new AST(opToken, readPow(), null);
+                    var newOp = op == OperatorType.Minus ? OperatorType.UnMinus : OperatorType.UnPlus;
+                    ret = new AST(new OperatorToken(newOp), readPow(), null);
                 }
                 else if (functions.Contains(op))
                 {
                     curTokIdx++;
-                    Func<AST, AST, AST> operate = (a, b) => new AST(opToken, a, b);
-                    ret = operate(readPow(), null);
+                    ret = new AST(opToken, readPow(), null);
                 }
                 else if (op == OperatorType.BraceOpen)
                 {

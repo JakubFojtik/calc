@@ -14,8 +14,8 @@ namespace calc
         {
             { "(",     OperatorType.BraceOpen },
             { ")",     OperatorType.BraceClose },
-            { "+",     OperatorType.Plus },
-            { "-",     OperatorType.Minus },
+            { "+",     OperatorType.Plus },  //we do not know arity yet
+            { "-",     OperatorType.Minus }, //we do not know arity yet
             { "*",     OperatorType.Star },
             { "/",     OperatorType.Slash },
             { "^",     OperatorType.Caret },

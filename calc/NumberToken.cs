@@ -11,7 +11,7 @@ namespace calc
             Value = value;
         }
 
-        public override bool HasOperands() => false;
+        public override int NumOperands() => 0;
 
         //Prints numbers in invariant culture so decimal separator is a dot
         public override string ToString()

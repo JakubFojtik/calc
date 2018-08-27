@@ -13,8 +13,10 @@ namespace calc
         public static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
             = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
         {
-            { OperatorType.Plus,   (a, b) => a + b                                   },
-            { OperatorType.Minus,  (a, b) => a - b                                   },
+            { OperatorType.UnPlus,   (a, b) => a                                     },
+            { OperatorType.UnMinus,  (a, b) => -a                                    },
+            { OperatorType.BinPlus,   (a, b) => a + b                                },
+            { OperatorType.BinMinus,  (a, b) => a - b                                },
             { OperatorType.Star,   (a, b) => a * b                                   },
             { OperatorType.Slash,  (a, b) => a / b                                   },
             { OperatorType.Caret,  (a, b) => (decimal)Math.Pow((double)a, (double)b) },
@@ -59,15 +61,9 @@ namespace calc
                 decimal defaultUnary(decimal? left) => operatorImpls[opType](first.Value, 0);
                 switch (opType)
                 {
-                    default:
+                    default:    //todo remove unary change to impls[x]
                         if (second == null) return defaultUnary(first);
                         else return defaultBinary(first, second);
-                    case OperatorType.Plus:
-                        if (second != null) return defaultBinary(first, second);
-                        else return first.Value;
-                    case OperatorType.Minus:
-                        if (second != null) return defaultBinary(first, second);
-                        else return -1 * first.Value;
                 }
             }
             else
@@ -86,7 +82,7 @@ namespace calc
                 if (item != null)
                 {
                     var val = item.value;
-                    if (!val.HasOperands()) return val.ToString();
+                    if (val.NumOperands() == 0) return val.ToString();
                     else return lines.First(x => x.Value.value == val).Key.ToString();
                 }
                 else return "";
@@ -97,7 +93,11 @@ namespace calc
                 if (removed.Contains(item.Key)) continue;
                 string first = writeItem(item.Value.left);
                 string second = writeItem(item.Value.right);
-                if (item.Value.value.HasOperands())
+                if (item.Value.value.NumOperands() == 1)
+                {
+                    ret.AppendLine(string.Format("{0}: {1} -> {2}", item.Key, item.Value.value, first));
+                }
+                if (item.Value.value.NumOperands() == 2)
                 {
                     ret.AppendLine(string.Format("{0}: {1} -> {2}, {3}", item.Key, item.Value.value, first, second));
                 }

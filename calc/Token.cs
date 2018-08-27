@@ -2,7 +2,7 @@
 {
     public abstract class Token
     {
-        public abstract bool HasOperands();
+        public abstract int NumOperands();
         public abstract override string ToString();
     }
 }
