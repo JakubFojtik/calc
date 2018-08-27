@@ -26,7 +26,7 @@ namespace calc
                     if (buffer.Count(x => decSeps.Contains(x)) > 1) throw new InvalidOperationException("multiple decseps");
                     if (decSeps.Contains(buffer.First())) buffer = 0 + buffer;
                     if (decSeps.Contains(buffer.Last())) buffer = buffer.TrimEnd(decSeps);
-                    // convert all decimal separators to one - does not support thousand separators
+                    // convert all decimal separators to current culture so converts work => does not support thousand separators
                     buffer = string.Join(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, buffer.Split(decSeps));
                     tokens.Add(new Token(TokenType.Number, Convert.ToDecimal(buffer)));
                 }

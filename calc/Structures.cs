@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -16,6 +17,7 @@ namespace calc
         public class Token
         {
             public TokenType Type { get; set; }
+            //Value is OperatorType or decimal
             public object Value { get; set; }
 
             public Token(TokenType type, object value = null)
@@ -24,40 +26,49 @@ namespace calc
                 Value = value;
             }
 
-            public override string ToString() => string.Format("{0}({1})", Type, Value);
+            //Prints numbers in invariant culture so decimal separator is a dot
+            public override string ToString() {
+                string stringVal;
+                var decVal = Value as decimal?;
+                if (decVal.HasValue) stringVal = decVal.Value.ToString(CultureInfo.InvariantCulture);
+                else stringVal = Value.ToString();
+                return string.Format("{0}({1})", Type, stringVal);
+            }
         }
 
         public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
 
         public enum Associativity { Left, Right }
 
-        public static Dictionary<string, (TokenType Token, OperatorType Operator, Priority Priority, Associativity Associativity)> operators
-            = new Dictionary<string, (TokenType, OperatorType, Priority, Associativity)>
+        public static Dictionary<string, (TokenType Token, OperatorType Operator)> operators
+            = new Dictionary<string, (TokenType, OperatorType)>
         {
-            { "(",    (TokenType.BraceOpen,  OperatorType.None,  Priority.Brace, Associativity.Right ) },
-            { ")",    (TokenType.BraceClose, OperatorType.None,  Priority.Brace, Associativity.Left  ) },
-            { "+",    (TokenType.Operator,   OperatorType.Plus,  Priority.Add,   Associativity.Left  ) },
-            { "-",    (TokenType.Operator,   OperatorType.Minus, Priority.Add,   Associativity.Left  ) },
-            { "*",    (TokenType.Operator,   OperatorType.Star,  Priority.Mult,  Associativity.Left  ) },
-            { "/",    (TokenType.Operator,   OperatorType.Slash, Priority.Mult,  Associativity.Left  ) },
-            { "^",    (TokenType.Operator,   OperatorType.Caret, Priority.Pow,   Associativity.Right ) },
-            { "sin",  (TokenType.Operator,   OperatorType.Sin ,  Priority.Fun,   Associativity.Right ) },
-            { "asin", (TokenType.Operator,   OperatorType.ASin,  Priority.Fun,   Associativity.Right ) },
-            { "sqrt", (TokenType.Operator,   OperatorType.Sqrt,  Priority.Fun,   Associativity.Right ) },
-            { "pi",   (TokenType.Constant,   OperatorType.Pi,    Priority.Fun,   Associativity.Left  ) },
+            { "(",    (TokenType.BraceOpen,  OperatorType.None) },
+            { ")",    (TokenType.BraceClose, OperatorType.None) },
+            { "+",    (TokenType.Operator,   OperatorType.Plus) },
+            { "-",    (TokenType.Operator,   OperatorType.Minus) },
+            { "*",    (TokenType.Operator,   OperatorType.Star) },
+            { "/",    (TokenType.Operator,   OperatorType.Slash) },
+            { "^",    (TokenType.Operator,   OperatorType.Caret) },
+            { "sin",  (TokenType.Operator,   OperatorType.Sin ) },
+            { "asin", (TokenType.Operator,   OperatorType.ASin) },
+            { "sqrt", (TokenType.Operator,   OperatorType.Sqrt) },
+            { "pi",   (TokenType.Constant,   OperatorType.Pi) },//do number.origval
         };
-        public static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
-            = new Dictionary<OperatorType, (Func<AST, AST, AST>, Func<decimal, decimal, decimal>)>
+        
+          
+        public static Dictionary<OperatorType, (Func<decimal, decimal, decimal> getDecimal, Priority Priority, Associativity Associativity)> operatorImpls
+            = new Dictionary<OperatorType, (Func<decimal, decimal, decimal>, Priority, Associativity)>
         {
-            { OperatorType.Plus,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Plus ), a, b), (a, b) => a + b) },
-            { OperatorType.Minus, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Minus), a, b), (a, b) => a - b) },
-            { OperatorType.Star,  ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Star ), a, b), (a, b) => a * b) },
-            { OperatorType.Slash, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Slash), a, b), (a, b) => a / b) },
-            { OperatorType.Caret, ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Caret), a, b), (a, b) => (decimal)Math.Pow((double)a, (double)b)) },
-            { OperatorType.Sin,    ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Sin((double)a)) },
-            { OperatorType.ASin,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sin), a, b), (a, b) => (decimal)Math.Asin((double)a)) },
-            { OperatorType.Sqrt,   ((a, b) => new AST(new Token(TokenType.Operator, OperatorType.Sqrt), a, b), (a, b) => (decimal)Math.Sqrt((double)a)) },
-            { OperatorType.Pi,     ((a, b) => new AST(new Token(TokenType.Constant, OperatorType.Pi), a, b), (a, b) => (decimal)Math.PI) },
+            { OperatorType.Plus,   ((a, b) => a + b                                    ,Priority.Add,  Associativity.Left       )   },
+            { OperatorType.Minus,  ((a, b) => a - b                                    ,Priority.Add,  Associativity.Left       )   },
+            { OperatorType.Star,   ((a, b) => a * b                                    ,Priority.Mult, Associativity.Left       )   },
+            { OperatorType.Slash,  ((a, b) => a / b                                    ,Priority.Mult, Associativity.Left       )   },
+            { OperatorType.Caret,  ((a, b) => (decimal)Math.Pow((double)a, (double)b)  ,Priority.Pow,  Associativity.Right      )   },
+            { OperatorType.Sin,    ((a, b) => (decimal)Math.Sin((double)a)             ,Priority.Fun,  Associativity.Right      )   },
+            { OperatorType.ASin,   ((a, b) => (decimal)Math.Asin((double)a)            ,Priority.Fun,  Associativity.Right      )   },
+            { OperatorType.Sqrt,   ((a, b) => (decimal)Math.Sqrt((double)a)            ,Priority.Fun,  Associativity.Right      )   },
+            { OperatorType.Pi,     ((a, b) => (decimal)Math.PI                         ,Priority.Fun,  Associativity.Left       )   },
         };
 
         public static readonly string ERROR = "Mat chyba";

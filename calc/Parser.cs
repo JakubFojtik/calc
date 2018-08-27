@@ -57,16 +57,15 @@ namespace calc
         {
             AST ret;
             ret = nextFun();
-            var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
+            var operatorTypes = operatorImpls.Where(x => x.Value.Priority == priority).Select(x => x.Key);
             while (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
             {
                 var op = (OperatorType)curTok.Value;
                 if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
-                    var operate = operatorImpls[op].getAST;
-                    var operatorData = operators.Values.First(x => x.Operator == op);
-                    if (operatorData.Associativity == Associativity.Left)
+                    Func<AST, AST, AST> operate = (a, b) => new AST(new Token(TokenType.Operator, op), a, b);
+                    if (operatorImpls[op].Associativity == Associativity.Left)
                     {
                         ret = operate(ret, nextFun());
                     }
@@ -94,7 +93,7 @@ namespace calc
 
             if (curTok.Type == TokenType.Operator)  //cist vsechny unarni opy, i fce
             {
-                var functions = operators.Values.Where(x => x.Priority == Priority.Fun).Select(x => x.Operator);
+                var functions = operatorImpls.Where(x => x.Value.Priority == Priority.Fun).Select(x => x.Key);
 
                 var op = (OperatorType)curTok.Value;
                 if (op == OperatorType.Minus)
@@ -110,7 +109,7 @@ namespace calc
                 else if (functions.Contains(op))
                 {
                     curTokIdx++;
-                    var operate = operatorImpls[op].getAST;
+                    Func<AST, AST, AST> operate = (a, b) => new AST(new Token(TokenType.Operator, op), a, b);
                     ret = operate(readPow(), null);
                 }
                 else throw new ArithmeticException(ERROR);
