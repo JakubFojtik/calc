@@ -1,8 +1,5 @@
-﻿using System;
+﻿using calc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using calc;
-using static calc.Token;
-using System.Collections.Generic;
 
 namespace test
 {
@@ -16,7 +13,7 @@ namespace test
             var lexer = new Lexer();
             var res = lexer.lexer(input);
             var str = string.Join(";", res);
-            var expected = "Operator(Minus);Number(5.5);Operator(Star);Number(61);Operator(Minus);BraceOpen(None);Operator(Minus);Operator(Sin);Number(3);Operator(Caret);Number(4);BraceClose(None);Operator(Slash);Number(5)";
+            var expected = "Operator(Minus);Number(5.5);Operator(Star);Number(61);Operator(Minus);Operator(BraceOpen);Operator(Minus);Operator(Sin);Number(3);Operator(Caret);Number(4);Operator(BraceClose);Operator(Slash);Number(5)";
             Assert.AreEqual(expected, str);
         }
     }

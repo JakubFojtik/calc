@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using calc;
+﻿using calc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static calc.Token;
+using System;
+using System.Collections.Generic;
+using static calc.OperatorToken;
 
 namespace test
 {
@@ -14,7 +14,7 @@ namespace test
             var parser = new Parser();
             var res = parser.parser(input);
             var str = res.printDFS(res);
-            if (parser.error) throw new AssertFailedException("Did not parser all.");
+            if (parser.SurplusTokensDetected) throw new AssertFailedException("Did not parse all.");
             return (str, res.compute());
         }
 
@@ -32,24 +32,24 @@ namespace test
         public void Simple()
         {
             var input = new List<Token> {
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
-                new Token(TokenType.Operator, OperatorType.Plus),
-                new Token(TokenType.Number, toNum(3)),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(99)),
-                new Token(TokenType.Operator, OperatorType.Star),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Number, toNum(7)),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.Plus),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(99)),
+                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Sin),
+                new NumberToken(toNum(7)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Minus) Operator(Plus) Operator(Minus) Number(3) Number(3) Operator(Star) Number(99) Operator(Minus) Number(3) Operator(Minus) Operator(Minus) Operator(Sin) Number(7) ";
+            var expectedText = "Operator(BinMinus) Operator(BinMinus) Operator(BinPlus) Operator(UnMinus) Number(3) Number(3) Operator(Star) Number(99) Operator(UnMinus) Number(3) Operator(UnMinus) Operator(UnMinus) Operator(Sin) Number(7) ";
             var expectedVal = 296.34301m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -59,21 +59,21 @@ namespace test
         public void Hard()
         {
             var input = new List<Token> {
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Number, toNum(99)),
-                new Token(TokenType.Operator, OperatorType.Star),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Number, toNum(7)),
-                new Token(TokenType.Operator, OperatorType.Caret),
-                new Token(TokenType.Number, toNum(7)),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Sin),
+                new NumberToken(toNum(99)),
+                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Sin),
+                new NumberToken(toNum(7)),
+                new OperatorToken(OperatorType.Caret),
+                new NumberToken(toNum(7)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Star) Operator(Minus) Operator(Sin) Number(99) Operator(Minus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
+            var expectedText = "Operator(BinMinus) Operator(Star) Operator(UnMinus) Operator(Sin) Number(99) Operator(UnMinus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
             var expectedVal = -2.62540m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -85,18 +85,18 @@ namespace test
         public void Harder()
         {
             var input = new List<Token> {
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(8)),
-                new Token(TokenType.Operator, OperatorType.Star),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Sin),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(8)),
+                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
             //var expectedText = "Operator(Minus) Operator(Star) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
-            var expectedText = "Operator(Star) Operator(Minus) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
+            var expectedText = "Operator(Star) Operator(UnMinus) Operator(Sin) Operator(UnMinus) Number(8) Operator(UnMinus) Number(3) ";
             var expectedVal = -2.96807m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -106,17 +106,17 @@ namespace test
         public void Harderer()
         {
             var input = new List<Token> {
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(8)),
-                new Token(TokenType.Operator, OperatorType.Caret),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new OperatorToken(OperatorType.Sin),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(8)),
+                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Minus) Operator(Sin) Operator(Minus) Operator(Caret) Number(8) Operator(Minus) Number(3) ";
+            var expectedText = "Operator(UnMinus) Operator(Sin) Operator(UnMinus) Operator(Caret) Number(8) Operator(UnMinus) Number(3) ";
             var expectedVal = 0.00195m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -126,18 +126,18 @@ namespace test
         public void Hardererer()
         {
             var input = new List<Token> {
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(1)),
-                new Token(TokenType.Operator, OperatorType.Star),
-                new Token(TokenType.Number, toNum(2)),
-                new Token(TokenType.Operator, OperatorType.Caret),
-                new Token(TokenType.Operator, OperatorType.Sin),
-                new Token(TokenType.Operator, OperatorType.Minus),
-                new Token(TokenType.Number, toNum(3)),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(1)),
+                new OperatorToken(OperatorType.Star),
+                new NumberToken(toNum(2)),
+                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Sin),
+                new OperatorToken(OperatorType.Minus),
+                new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Star) Operator(Minus) Number(1) Operator(Caret) Number(2) Operator(Sin) Operator(Minus) Number(3) ";
+            var expectedText = "Operator(Star) Operator(UnMinus) Number(1) Operator(Caret) Number(2) Operator(Sin) Operator(UnMinus) Number(3) ";
             var expectedVal = -0.90681m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -147,10 +147,10 @@ namespace test
         public void Negative()
         {
             var input = new List<Token> {
-                new Token(TokenType.Number, toNum(8)),
-                new Token(TokenType.Operator, OperatorType.Caret),
-                new Token(TokenType.Operator, OperatorType.Caret),
-                new Token(TokenType.Number, toNum(3)),
+                new NumberToken(toNum(8)),
+                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Caret),
+                new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
