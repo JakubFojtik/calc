@@ -117,8 +117,16 @@ namespace calc
                 }
                 else if (functions.Contains(op))
                 {
+                    var fun = opToken;
                     curTokIdx++;
-                    ret = new AST(opToken, readPow(), null);
+                    if ((opToken = curTok as OperatorToken) != null && opToken.Operator == OperatorType.BraceOpen)
+                    {
+                        ret = new AST(fun, readFactor(), null);
+                    }
+                    else
+                    {
+                        ret = new AST(fun, readPow(), null);
+                    }
                 }
                 else if (op == OperatorType.BraceOpen)
                 {

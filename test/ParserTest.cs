@@ -144,6 +144,41 @@ namespace test
         }
 
         [TestMethod]
+        public void PrioritySinus()
+        {
+            var input = new List<Token> {
+                new OperatorToken(OperatorType.Sin),
+                new OperatorToken(OperatorType.BraceOpen),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.BraceClose),
+                new OperatorToken(OperatorType.Caret),
+                new NumberToken(toNum(3)),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            var expectedText = "Operator(Caret) Operator(Sin) Number(3) Number(3) ";
+            var expectedVal = 0.00281m;
+            Assert.AreEqual(expectedText, res.Item1);
+            Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+        [TestMethod]
+        public void NonPrioritySinus()
+        {
+            var input = new List<Token> {
+                new OperatorToken(OperatorType.Sin),
+                new NumberToken(toNum(3)),
+                new OperatorToken(OperatorType.Caret),
+                new NumberToken(toNum(3)),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            var expectedText = "Operator(Sin) Operator(Caret) Number(3) Number(3) ";
+            var expectedVal = 0.95637m;
+            Assert.AreEqual(expectedText, res.Item1);
+            Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+
+        [TestMethod]
         public void Negative()
         {
             var input = new List<Token> {
