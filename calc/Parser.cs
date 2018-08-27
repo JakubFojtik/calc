@@ -9,7 +9,8 @@ namespace calc
     {
         public static readonly string ERROR = "Mat chyba";
 
-        public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
+        //Priority is only to group similar operands, real priority is determined by parser
+        public enum Priority { Add, Mult, Pow, Fun }
 
         public enum Associativity { Left, Right }
 
@@ -44,17 +45,6 @@ namespace calc
             return ret;
         }
 
-        public class Value
-        {
-            private decimal val;
-            public Value(decimal d) => val = d;
-            public static implicit operator Value(decimal d) => new Value(d);
-            public static implicit operator decimal(Value d) => d.val;
-            public void Negate() => val = -val;
-            public override string ToString() => val.ToString();
-        }
-
-
         //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
         //SCIT -> SCIT + NAS | NAS
         //NAS -> NAS * FUN | FUN
@@ -72,7 +62,7 @@ namespace calc
         //Rest-> ? Op | e
 
         //LL parser cannot preserve left associativity when removing left recursion, unless iteration is used.
-        private AST readSimpleBinaryOperator(Priority priority, Func<AST> nextFun)
+        private AST readBinaryOperator(Priority priority, Func<AST> nextFun)
         {
             AST ret;
             ret = nextFun();
@@ -93,7 +83,7 @@ namespace calc
                     }
                     else
                     {
-                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
+                        ret = operate(ret, readBinaryOperator(priority, nextFun));
                     }
                 }
                 else
@@ -104,9 +94,9 @@ namespace calc
             return ret;
         }
 
-        private AST readAdd() => readSimpleBinaryOperator(Priority.Add, readMul);
-        private AST readMul() => readSimpleBinaryOperator(Priority.Mult, readPow);
-        private AST readPow() => readSimpleBinaryOperator(Priority.Pow, readFactor);
+        private AST readAdd() => readBinaryOperator(Priority.Add, readMul);
+        private AST readMul() => readBinaryOperator(Priority.Mult, readPow);
+        private AST readPow() => readBinaryOperator(Priority.Pow, readFactor);
 
         private AST readFactor()
         {
@@ -138,13 +128,13 @@ namespace calc
             }
             else if ((numToken = curTok as NumberToken) != null)
             {
-                ret = new AST(numToken);
                 curTokIdx++;
+                ret = new AST(numToken);
             }
             else if ((conToken = curTok as ConstantToken) != null)
             {
-                ret = new AST(conToken);
                 curTokIdx++;
+                ret = new AST(conToken);
             }
             else throw new ArithmeticException(ERROR);
 

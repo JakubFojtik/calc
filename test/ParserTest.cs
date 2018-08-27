@@ -25,7 +25,7 @@ namespace test
 
         private static bool areNumbersEqual(decimal a, decimal b)
         {
-            return Math.Abs((double)a) - Math.Abs((double)b) < 0.0001;
+            return Math.Abs(Math.Abs((double)a) - Math.Abs((double)b)) < 0.0001;
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace test
                 new NumberToken(toNum(99)),
                 new OperatorToken(OperatorType.Star),
                 new OperatorToken(OperatorType.Minus),
-                new NumberToken(toNum(3)),
+                new ConstantToken(ConstantToken.ConstantType.E),
                 new OperatorToken(OperatorType.Minus),
                 new OperatorToken(OperatorType.Minus),
                 new OperatorToken(OperatorType.Minus),
@@ -49,8 +49,8 @@ namespace test
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(BinMinus) Operator(BinMinus) Operator(BinPlus) Operator(UnMinus) Number(3) Number(3) Operator(Star) Number(99) Operator(UnMinus) Number(3) Operator(UnMinus) Operator(UnMinus) Operator(Sin) Number(7) ";
-            var expectedVal = 296.34301m;
+            var expectedText = "Operator(BinMinus) Operator(BinMinus) Operator(BinPlus) Operator(UnMinus) Number(3) Number(3) Operator(Star) Number(99) Operator(UnMinus) Constant(E) Operator(UnMinus) Operator(UnMinus) Operator(Sin) Number(7) ";
+            var expectedVal = 268.45291m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
