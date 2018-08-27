@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using static calc.Token;
 
 namespace calc
 {
@@ -22,12 +19,12 @@ namespace calc
                 Console.WriteLine("Parser:");
                 var parser = new Parser();
                 AST ast = parser.parser(tokens);
-                Console.WriteLine(ast.printDeriv());
+                Console.WriteLine(ast?.printDeriv());
                 Console.WriteLine();
-                var res = ast.compute();
+                var res = ast?.compute() ?? 0m;
                 Console.WriteLine("Result: " + res + " = " + res.ToString("e"));
 
-                if (parser.error) Console.WriteLine("Error: Did not process all tokens.");
+                if (parser.SurplusTokensDetected) Console.WriteLine("Error: Did not process all tokens.");
             }
         }
 

@@ -2,27 +2,29 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using static calc.Token;
+using static calc.OperatorToken;
 
 namespace calc
 {
     public class Lexer
     {
-        public static Dictionary<string, (TokenType Token, OperatorType Operator)> operators
-            = new Dictionary<string, (TokenType, OperatorType)>
+        public static Dictionary<string, OperatorType> operators
+            = new Dictionary<string, OperatorType>
         {
-            { "(",    (TokenType.BraceOpen,  OperatorType.None) },
-            { ")",    (TokenType.BraceClose, OperatorType.None) },
-            { "+",    (TokenType.Operator,   OperatorType.Plus) },
-            { "-",    (TokenType.Operator,   OperatorType.Minus) },
-            { "*",    (TokenType.Operator,   OperatorType.Star) },
-            { "/",    (TokenType.Operator,   OperatorType.Slash) },
-            { "^",    (TokenType.Operator,   OperatorType.Caret) },
-            { "sin",  (TokenType.Operator,   OperatorType.Sin ) },
-            { "asin", (TokenType.Operator,   OperatorType.ASin) },
-            { "sqrt", (TokenType.Operator,   OperatorType.Sqrt) },
-            { "pi",   (TokenType.Constant,   OperatorType.Pi) },//do number.origval
+            { "(",     OperatorType.BraceOpen },
+            { ")",     OperatorType.BraceClose },
+            { "+",     OperatorType.Plus },
+            { "-",     OperatorType.Minus },
+            { "*",     OperatorType.Star },
+            { "/",     OperatorType.Slash },
+            { "^",     OperatorType.Caret },
+            { "sin",   OperatorType.Sin  },
+            { "asin",  OperatorType.ASin },
+            { "sqrt",  OperatorType.Sqrt },
+            { "pi",    OperatorType.Pi },//do number.origval
         };
+
+        public char[] decSeps = { ',', '.' };
 
         public enum State { Empty, Number, Operator }
 
@@ -40,11 +42,10 @@ namespace calc
                     if (buffer.Count(x => decSeps.Contains(x)) > 1) throw new InvalidOperationException("multiple decseps");
                     if (decSeps.Contains(buffer.First())) buffer = 0 + buffer;
                     if (decSeps.Contains(buffer.Last())) buffer = buffer.TrimEnd(decSeps);
-                    // convert all decimal separators to current culture so converts work => does not support thousand separators
-                    buffer = string.Join(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, buffer.Split(decSeps));
-                    tokens.Add(new Token(TokenType.Number, Convert.ToDecimal(buffer)));
+                    buffer = unifyDecSeps(buffer);
+                    tokens.Add(new NumberToken(Convert.ToDecimal(buffer)));
                 }
-                else if (operators.ContainsKey(buffer)) tokens.Add(new Token(operators[buffer].Token, operators[buffer].Operator));
+                else if (operators.ContainsKey(buffer)) tokens.Add(new OperatorToken(operators[buffer]));
                 else throw new InvalidOperationException("badbuffer");
 
                 void setEmpty() { buffer = ""; state = State.Empty; }
@@ -89,6 +90,12 @@ namespace calc
             return tokens;
         }
 
+        private string unifyDecSeps(string buffer)
+        {
+            // convert all decimal separators to current culture so converts work => does not support thousand separators
+            return string.Join(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, buffer.Split(decSeps));
+        }
+
         bool isNumeric(string buffer)
         {
             return !string.IsNullOrWhiteSpace(buffer) && areAllCharsNumeric(buffer);
@@ -120,8 +127,6 @@ namespace calc
                     ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
             }
         }
-
-        public char[] decSeps = { ',', '.' };
 
     }
 }

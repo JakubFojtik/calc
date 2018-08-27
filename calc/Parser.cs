@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static calc.Token;
+using static calc.OperatorToken;
 
 namespace calc
 {
@@ -14,8 +12,6 @@ namespace calc
         public enum Priority { None = 0, Add, Mult, Pow, Fun, Brace } //brace mimo?
 
         public enum Associativity { Left, Right }
-
-        public Associativity operatorAssoc(OperatorType op) => op == OperatorType.Caret ? Associativity.Right : Associativity.Left;
 
         public ILookup<Priority, OperatorType> operatorsByPriority
             = new (Priority Priority, OperatorType OperatorType)[]
@@ -33,17 +29,19 @@ namespace calc
 
         private List<Token> tokens;
         private int curTokIdx;
-        private Token curTok => tokens.ElementAtOrDefault(curTokIdx) ?? new Token(TokenType.EOF);
+        //returns null after last token. Does not require fallthrough in recdesc methods, because they just don't capture it (would produce surplus tokens error if there are more)
+        private Token curTok => tokens.ElementAtOrDefault(curTokIdx);
 
-        public bool error { get; private set; }
+        public bool SurplusTokensDetected { get; private set; }
 
         public AST parser(List<Token> tokens)
         {
+            if (tokens.Count < 1) return null;
             this.tokens = tokens;
             curTokIdx = 0;
             AST ret = readAll();
 
-            if (curTokIdx != tokens.Count) error = true;
+            if (curTokIdx != tokens.Count) SurplusTokensDetected = true;
             return ret;
         }
 
@@ -80,14 +78,15 @@ namespace calc
             AST ret;
             ret = nextFun();
             var operatorTypes = operatorsByPriority[priority];
-            while (curTok.Type == TokenType.Operator)
+            OperatorToken opToken;
+            while ((opToken = curTok as OperatorToken) != null)
             {
-                var op = (OperatorType)curTok.Value;
+                var op = opToken.Operator;
                 if (operatorTypes.Contains(op))
                 {
                     curTokIdx++;
-                    Func<AST, AST, AST> operate = (a, b) => new AST(new Token(TokenType.Operator, op), a, b);
-                    if (operatorAssoc(op) == Associativity.Left)
+                    Func<AST, AST, AST> operate = (a, b) => new AST(new OperatorToken(op), a, b);
+                    if (opToken.Associativity == Associativity.Left)
                     {
                         ret = operate(ret, nextFun());
                     }
@@ -111,43 +110,39 @@ namespace calc
         private AST readFactor()
         {
             AST ret;
-
-            if (curTok.Type == TokenType.Operator)  //cist vsechny unarni opy, i fce
+            OperatorToken opToken;
+            NumberToken numToken;
+            if ((opToken = curTok as OperatorToken) != null)
             {
                 var functions = operatorsByPriority[Priority.Fun];
 
-                var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Minus)
+                var op = opToken.Operator;
+                if (op == OperatorType.Minus || op == OperatorType.Plus)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readPow(), null);
-                }
-                else if (op == OperatorType.Plus)
-                {
-                    curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readPow(), null);
+                    ret = new AST(opToken, readPow(), null);
                 }
                 else if (functions.Contains(op))
                 {
                     curTokIdx++;
-                    Func<AST, AST, AST> operate = (a, b) => new AST(new Token(TokenType.Operator, op), a, b);
+                    Func<AST, AST, AST> operate = (a, b) => new AST(opToken, a, b);
                     ret = operate(readPow(), null);
+                }
+                else if (op == OperatorType.BraceOpen)
+                {
+                    ret = readBrace();
+                }
+                else if (op == OperatorType.Pi)//todo generalize
+                {
+                    ret = new AST(opToken);
+                    curTokIdx++;
                 }
                 else throw new ArithmeticException(ERROR);
             }
-            else if (curTok.Type == TokenType.Number)
+            else if ((numToken = curTok as NumberToken) != null)
             {
-                ret = new AST(curTok);
+                ret = new AST(numToken);
                 curTokIdx++;
-            }
-            else if (curTok.Type == TokenType.Constant)
-            {
-                ret = new AST(curTok);
-                curTokIdx++;
-            }
-            else if (curTok.Type == TokenType.BraceOpen)
-            {
-                ret = readBrace();
             }
             else throw new ArithmeticException(ERROR);
 
@@ -159,7 +154,7 @@ namespace calc
             AST ret;
             curTokIdx++;
             ret = readAdd();
-            if (curTok.Type == TokenType.BraceClose)
+            if ((curTok as OperatorToken)?.Operator == OperatorType.BraceClose)
             {
                 curTokIdx++;
             }

@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="AST.cs" />
     <Compile Include="Lexer.cs" />
+    <Compile Include="NumberToken.cs" />
+    <Compile Include="OperatorToken.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
