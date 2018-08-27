@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static regexp.Strutures;
 
 namespace regexp
@@ -19,7 +17,7 @@ namespace regexp
         {
             this.tokens = tokens;
             curTokIdx = 0;
-            AST ret = readAll();
+            AST ret = readReg();
 
             if (curTokIdx != tokens.Count) error = true;
             return ret;
@@ -77,29 +75,29 @@ namespace regexp
             }
             return ret;
         }
-        */
+        
         private AST readReg() => readSimpleBinaryOperator(readMul);
         private AST readMul() => readSimpleBinaryOperator(readFun);
         private AST readPow() => readSimpleBinaryOperator(readFactor);
-
+        */
         //sin cos 1^5
         //sin (1)^5 todo braces belong to sin
         //todo max(3,5)
-        private AST readFun()
+        private AST readOr()
         {
-            AST ret = null;
-            var operatorTypes = operators.Values.Where(x => x.Priority == Priority.Fun).Select(x => x.Operator);
-
-            if (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
+            AST ret = readNotOr();
+            while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
-                curTokIdx++;
-                var operate = operatorImpls[op].getAST;
-                ret = operate(readFun(), null);
-            }
-            else
-            {
-                ret = readPow();
+                if (op == OperatorType.Or)
+                {
+                    curTokIdx++;
+                    ret = new AST(new Token(TokenType.Operator, op), ret, readOr());
+                }
+                else
+                {
+                    break;
+                }
             }
             return ret;
         }

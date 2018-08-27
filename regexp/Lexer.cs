@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static regexp.Strutures;
 
 namespace regexp
@@ -20,7 +16,7 @@ namespace regexp
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                if (c == ' ')
+                if (char.IsWhiteSpace(c))
                 {
                     continue;
                 }

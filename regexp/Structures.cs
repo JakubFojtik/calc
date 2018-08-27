@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace regexp
 {
@@ -11,9 +8,9 @@ namespace regexp
         public enum OperatorType
         {
             None,
+            Dot,
             Star,
             Caret,
-            Dot,
             Dollar,
             Or,
             CBraceOpen,
@@ -171,15 +168,15 @@ namespace regexp
         public static Dictionary<string, OperatorType> operators
             = new Dictionary<string, OperatorType>
         {
+            { ".",  OperatorType.Dot         },
+            { "*",  OperatorType.Star        },
+            { "^",  OperatorType.Caret       },
+            { "$",  OperatorType.Dollar      },
+            { "|",  OperatorType.Or          },
             { "(",  OperatorType.CBraceOpen  },
             { ")",  OperatorType.CBraceClose },
             { "[",  OperatorType.EBraceOpen  },
             { "]",  OperatorType.EBraceClose },
-            { "*",  OperatorType.Star        },
-            { ".",  OperatorType.Dot         },
-            { "^",  OperatorType.Caret       },
-            { "$",  OperatorType.Dollar      },
-            { "|",  OperatorType.Or          },
         };
         /*
         public static Dictionary<OperatorType, (Func<AST, AST, AST> getAST, Func<decimal, decimal, decimal> getDecimal)> operatorImpls
