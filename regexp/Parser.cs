@@ -11,7 +11,7 @@ namespace regexp
         private int curTokIdx;
         private Token curTok => tokens.ElementAtOrDefault(curTokIdx) ?? new Token(TokenType.EOF);
 
-        public bool error { get; private set; }
+        public bool SurplusTokensDetected { get; private set; }
 
         public AST parser(List<Token> tokens)
         {
@@ -19,7 +19,7 @@ namespace regexp
             curTokIdx = 0;
             AST ret = readReg();
 
-            if (curTokIdx != tokens.Count) error = true;
+            if (curTokIdx != tokens.Count) SurplusTokensDetected = true;
             return ret;
         }
 
@@ -118,12 +118,10 @@ namespace regexp
                 var op = (OperatorType)curTok.Value;
                 if (op == OperatorType.CBraceOpen)
                 {
-                    curTokIdx++;
                     ret = new AST(curTok, readBrace(OperatorType.CBraceClose), null);
                 }
                 else if (op == OperatorType.EBraceOpen)
                 {
-                    curTokIdx++;
                     ret = new AST(curTok, readBrace(OperatorType.EBraceClose), null);
                 }
                 else throw new ArithmeticException(ERROR);
