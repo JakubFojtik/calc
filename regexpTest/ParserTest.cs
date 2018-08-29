@@ -68,5 +68,29 @@ namespace regexpTest
             //Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
 
+        //(999*)*|99*
+        [TestMethod]
+        public void Harder()
+        {
+            var input = new List<Token> {
+                new Token(TokenType.Operator, OperatorType.CBraceOpen),
+                new Token(TokenType.Char, toNum(9)),
+                new Token(TokenType.Char, toNum(9)),
+                new Token(TokenType.Char, toNum(9)),
+                new Token(TokenType.Operator, OperatorType.Star),
+                new Token(TokenType.Operator, OperatorType.CBraceClose),
+                new Token(TokenType.Operator, OperatorType.Or),
+                new Token(TokenType.Char, toNum(9)),
+                new Token(TokenType.Char, toNum(9)),
+                new Token(TokenType.Operator, OperatorType.Star),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            var expectedText = "Operator(Or) Operator(CBraceOpen) Operator(Concat) Char(9) Operator(Concat) Char(9) Operator(Star) Char(9) Operator(Concat) Char(9) Operator(Star) Char(9) ";
+            //var expectedVal = -2.96807m;
+            Assert.AreEqual(expectedText, res.Item1);
+            //Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+
     }
 }

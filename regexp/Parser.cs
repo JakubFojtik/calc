@@ -23,52 +23,8 @@ namespace regexp
             return ret;
         }
 
-        //(fr[^r])*|qwe
-        //REX->PUM\|PUM | PUM
-        //PUM->CH DOPUM
-        //DOPUM-> * | e
-        //CH->a|ANY|ONE|MANY
-        //ANY->.
-        //ONE->[REX]|[^REX]
-        //MANY->(REX)
-        /*
-        //LL parser cannot preserve left associativity when removing left recursion, unless iteration is used.
-        private AST readSimpleBinaryOperator(Priority priority, Func<AST> nextFun)
-        {
-            AST ret;
-            ret = nextFun();
-            var operatorTypes = operators.Values.Where(x => x.Priority == priority).Select(x => x.Operator);
-            while (curTok.Type == TokenType.Operator && operatorTypes.Contains((OperatorType)curTok.Value))
-            {
-                var op = (OperatorType)curTok.Value;
-                if (operatorTypes.Contains(op))
-                {
-                    curTokIdx++;
-                    var operate = operatorImpls[op].getAST;
-                    var operatorData = operators.Values.First(x => x.Operator == op);
-                    if (operatorData.Associativity == Associativity.Left)
-                    {
-                        ret = operate(ret, nextFun());
-                    }
-                    else
-                    {
-                        ret = operate(ret, readSimpleBinaryOperator(priority, nextFun));
-                    }
-                }
-                else
-                {
-                    // zatim nic vyresit zavorky a ostatni (pridat do gramatiky) a tu hazet chybu parseru
-                    break;
-                }
-            }
-            return ret;
-        }
-        
-        private AST readReg() => readSimpleBinaryOperator(readMul);
-        private AST readMul() => readSimpleBinaryOperator(readFun);
-        private AST readPow() => readSimpleBinaryOperator(readFactor);
-        */
         private AST readReg() => readOr();
+
         //sin cos 1^5
         //sin (1)^5 todo braces belong to sin
         //todo max(3,5)
@@ -97,7 +53,7 @@ namespace regexp
             while (curTok.Type == TokenType.Char)
             {
                 ret = new AST(new Token(TokenType.Operator, OperatorType.Concat), ret, readCharSeq());
-                curTokIdx++;
+                //curTokIdx++;
             }
             return ret;
         }
