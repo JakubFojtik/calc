@@ -15,7 +15,7 @@ namespace calc
         public enum Associativity { Left, Right }
 
         public ILookup<Priority, OperatorType> operatorsByPriority
-            = new (Priority Priority, OperatorType OperatorType)[]
+            = new(Priority Priority, OperatorType OperatorType)[]
             {
                 ( Priority.Add,  OperatorType.Plus  ),
                 ( Priority.Add,  OperatorType.Minus ),
@@ -153,8 +153,8 @@ namespace calc
         {
             AST ret;
             curTokIdx++;
-            ret = readAdd();
-            if ((curTok as OperatorToken)?.Operator == OperatorType.BraceClose)
+            ret = readAll();
+            if (isCurTok(OperatorType.BraceClose))
             {
                 curTokIdx++;
             }
@@ -162,5 +162,9 @@ namespace calc
             return ret;
         }
 
+        private bool isCurTok(OperatorType op)
+        {
+            return (curTok as OperatorToken)?.Operator == op;
+        }
     }
 }

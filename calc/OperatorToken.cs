@@ -6,11 +6,7 @@ namespace calc
     {
         public enum OperatorType
         {
-            BraceOpen, BraceClose, Plus, Minus, Star, Slash, Sin, ASin, Caret, Sqrt,
-            UnPlus,
-            UnMinus,
-            BinPlus,
-            BinMinus
+            BraceOpen, BraceClose, Plus, Minus, Star, Slash, Sin, ASin, Caret, Sqrt, UnPlus, UnMinus, BinPlus, BinMinus
         }
 
         public OperatorType Operator { get; private set; }

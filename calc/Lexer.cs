@@ -19,6 +19,7 @@ namespace calc
             { "*",     OperatorType.Star },
             { "/",     OperatorType.Slash },
             { "^",     OperatorType.Caret },
+            { "**",    OperatorType.Caret },
             { "sin",   OperatorType.Sin  },
             { "asin",  OperatorType.ASin },
             { "sqrt",  OperatorType.Sqrt },

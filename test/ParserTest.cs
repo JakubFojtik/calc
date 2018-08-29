@@ -195,6 +195,5 @@ namespace test
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
 
-
     }
 }

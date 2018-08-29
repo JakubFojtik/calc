@@ -87,10 +87,9 @@ namespace calc
                 }
                 else return "";
             };
-            var removed = new HashSet<int>();
+
             foreach (var item in lines.OrderBy(x => x.Key))
             {
-                if (removed.Contains(item.Key)) continue;
                 string first = writeItem(item.Value.left);
                 string second = writeItem(item.Value.right);
                 if (item.Value.value.NumOperands() == 1)

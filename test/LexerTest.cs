@@ -16,5 +16,15 @@ namespace test
             var expected = "Operator(Minus);Number(5.5);Operator(Star);Number(61);Operator(Minus);Operator(BraceOpen);Operator(Minus);Operator(Sin);Number(3);Operator(Caret);Number(4);Operator(BraceClose);Operator(Slash);Number(5)";
             Assert.AreEqual(expected, str);
         }
+        [TestMethod]
+        public void DoubleStarCaretPrefixOp()
+        {
+            var input = "2**3";
+            var lexer = new Lexer();
+            var res = lexer.lexer(input);
+            var str = string.Join(";", res);
+            var expected = "Number(2);Operator(Caret);Number(3)";
+            Assert.AreEqual(expected, str);
+        }
     }
 }
