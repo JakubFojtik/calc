@@ -23,18 +23,6 @@ namespace regexp
             return ret;
         }
 
-        public class Value
-        {
-            private decimal val;
-            public Value(decimal d) => val = d;
-            public static implicit operator Value(decimal d) => new Value(d);
-            public static implicit operator decimal(Value d) => d.val;
-            public void Negate() => val = -val;
-            public override string ToString() => val.ToString();
-        }
-
-
-
         //(fr[^r])*|qwe
         //REX->PUM\|PUM | PUM
         //PUM->CH DOPUM
@@ -80,12 +68,13 @@ namespace regexp
         private AST readMul() => readSimpleBinaryOperator(readFun);
         private AST readPow() => readSimpleBinaryOperator(readFactor);
         */
+        private AST readReg() => readOr();
         //sin cos 1^5
         //sin (1)^5 todo braces belong to sin
         //todo max(3,5)
         private AST readOr()
         {
-            AST ret = readNotOr();
+            AST ret = readStar();
             while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
@@ -93,6 +82,24 @@ namespace regexp
                 {
                     curTokIdx++;
                     ret = new AST(new Token(TokenType.Operator, op), ret, readOr());
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return ret;
+        }
+        private AST readStar()
+        {
+            AST ret = readFactor();
+            while (curTok.Type == TokenType.Operator)
+            {
+                var op = (OperatorType)curTok.Value;
+                if (op == OperatorType.Star)
+                {
+                    curTokIdx++;
+                    ret = new AST(new Token(TokenType.Operator, op), ret, null);
                 }
                 else
                 {
@@ -109,51 +116,57 @@ namespace regexp
             if (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Minus)
+                if (op == OperatorType.CBraceOpen)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Minus), readMul(), null);
+                    ret = new AST(curTok, readBrace(OperatorType.CBraceClose), null);
                 }
-                else if (op == OperatorType.Plus)
+                else if (op == OperatorType.EBraceOpen)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, OperatorType.Plus), readMul(), null);
+                    ret = new AST(curTok, readBrace(OperatorType.EBraceClose), null);
                 }
                 else throw new ArithmeticException(ERROR);
             }
-            else if (curTok.Type == TokenType.Number)
+            else if (curTok.Type == TokenType.Char)
             {
-                ret = new AST(curTok);
+                var tmpTok = curTok;
                 curTokIdx++;
+                ret = new AST(tmpTok, null, readChars());
+                /*
+                var chars = new List<char>();
+                while (curTok.Type == TokenType.Char)
+                {
+                    chars.Add((char)curTok.Value);
+                    curTokIdx++;
+                }
+                if (chars.Count > 1)
+                {
+                    //remove last char as it can be target of postfix operators
+                    chars.RemoveAt(chars.Count - 1);
+                    curTokIdx--;
+                }
+                ret = new AST(new Token(TokenType.Char, chars));*/
             }
-            else if (curTok.Type == TokenType.BraceOpen)
-            {
-                ret = readBrace();
-            }
-            else throw new ArithmeticException(ERROR);
+            else ret = null;
 
             return ret;
         }
 
-        private AST readCBrace()
+        private AST readChars()
         {
-            AST ret;
+            if (curTok.Type != TokenType.Char) return null;
+            var tmpTok = curTok;
             curTokIdx++;
-            ret = readAdd();
-            if (isCurTok(OperatorType.CBraceClose))
-            {
-                curTokIdx++;
-            }
-            else throw new ArithmeticException(ERROR);
-            return ret;
+            return new AST(tmpTok, null, readChars());
         }
 
-        private AST readEBrace()
+        private AST readBrace(OperatorType closer)
         {
             AST ret;
             curTokIdx++;
-            ret = readAdd();
-            if (isCurTok(OperatorType.EBraceClose))
+            ret = readReg();
+            if (isCurTok(closer))
             {
                 curTokIdx++;
             }

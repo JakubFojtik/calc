@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static regexp.Strutures;
 
 namespace regexp
@@ -19,6 +16,11 @@ namespace regexp
                 var lexer = new Lexer();
                 List<Token> tokens = lexer.lexer(input);
                 Console.WriteLine("Lexer: " + string.Join(", ", tokens));
+
+                var parser = new Parser();
+                var ast = parser.parser(tokens);
+                Console.WriteLine("Parser: ");
+                Console.WriteLine(string.Join(", ", ast.printDeriv()));
 
             }
         }

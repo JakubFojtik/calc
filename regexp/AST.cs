@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using static regexp.Strutures;
 
 namespace regexp
@@ -58,33 +57,46 @@ namespace regexp
 
         public string printDeriv()
         {
+            var lines = new Dictionary<int, AST>();
+            mapLines(this, lines);
             StringBuilder ret = new StringBuilder();
-            /*
-            var map = new Dictionary<int, AST>();
-            fillMap(this, map);
             Func<AST, string> writeItem = item =>
             {
                 if (item != null)
                 {
                     var val = item.value;
-                    if (val.Type == TokenType.Number) return val.ToString();
-                    else return map.First(x => x.Value.value == val).Key.ToString();
+                    if (item.left == null && item.left == item.right) return val.ToString();
+                    else return lines.First(x => x.Value.value == val).Key.ToString();
                 }
                 else return "";
             };
-            var removed = new HashSet<int>();
-            foreach (var item in map.OrderBy(x => x.Key))
+
+            foreach (var item in lines.OrderBy(x => x.Key))
             {
-                if (removed.Contains(item.Key)) continue;
                 string first = writeItem(item.Value.left);
                 string second = writeItem(item.Value.right);
-                if (item.Value.value.Type != TokenType.Number)
+                if (item.Value.left != null && item.Value.right != null)
                 {
                     ret.AppendLine(string.Format("{0}: {1} -> {2}, {3}", item.Key, item.Value.value, first, second));
                 }
+                else if (item.Value.left != null)
+                {
+                    ret.AppendLine(string.Format("{0}: {1} -> {2}", item.Key, item.Value.value, first));
+                }
+                else if (item.Value.right != null)
+                {
+                    ret.AppendLine(string.Format("{0}: {1} -> {2}", item.Key, item.Value.value, second));
+                }
             }
-            */
             return ret.ToString();
+        }
+
+        private void mapLines(AST ast, Dictionary<int, AST> map)
+        {
+            int num = map.Count;
+            map.Add(num, ast);
+            if (ast.left != null) mapLines(ast.left, map);
+            if (ast.right != null) mapLines(ast.right, map);
         }
 
         private void fillMap(AST ast, Dictionary<int, AST> map)
