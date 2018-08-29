@@ -7,11 +7,10 @@ namespace regexp
         public enum TokenType { Char, Operator, EOF }
         public enum OperatorType
         {
-            None,
             Dot,
             Star,
-            Caret,
-            Dollar,
+            //Caret,
+            //Dollar,
             Or,
             CBraceOpen,
             CBraceClose,
@@ -171,8 +170,8 @@ namespace regexp
         {
             { ".",  OperatorType.Dot         },
             { "*",  OperatorType.Star        },
-            { "^",  OperatorType.Caret       },
-            { "$",  OperatorType.Dollar      },
+            //{ "^",  OperatorType.Caret       },
+            //{ "$",  OperatorType.Dollar      },
             { "|",  OperatorType.Or          },
             { "(",  OperatorType.CBraceOpen  },
             { ")",  OperatorType.CBraceClose },

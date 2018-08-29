@@ -46,11 +46,12 @@ namespace regexp
             }
             return ret;
         }
-
+        //g*(56*)*
         private AST readCharSeq()
         {
             AST ret = readRep();
-            while (curTok.Type == TokenType.Char)
+            var starterOps = new List<OperatorType> { OperatorType.CBraceOpen, OperatorType.EBraceOpen };
+            while (curTok.Type == TokenType.Char || (curTok.Type == TokenType.Operator && starterOps.Contains((OperatorType)curTok.Value)))
             {
                 ret = new AST(new Token(TokenType.Operator, OperatorType.Concat), ret, readCharSeq());
                 //curTokIdx++;

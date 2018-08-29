@@ -16,11 +16,6 @@ namespace regexp
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                if (char.IsWhiteSpace(c))
-                {
-                    continue;
-                }
-
                 buffer += c;
                 if (isOperator(buffer)) tokens.Add(new Token(TokenType.Operator, operators[buffer]));
                 else tokens.Add(new Token(TokenType.Char, buffer));
