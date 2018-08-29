@@ -19,7 +19,7 @@ namespace regexp
             curTokIdx = 0;
             AST ret = readReg();
 
-            if (curTokIdx != tokens.Count) SurplusTokensDetected = true;
+            if (curTokIdx < tokens.Count) SurplusTokensDetected = true;
             return ret;
         }
 
@@ -74,7 +74,7 @@ namespace regexp
         //todo max(3,5)
         private AST readOr()
         {
-            AST ret = readStar();
+            AST ret = readCharSeq();
             while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
@@ -90,21 +90,30 @@ namespace regexp
             }
             return ret;
         }
-        private AST readStar()
+
+        private AST readCharSeq()
+        {
+            AST ret = readRep();
+            while (curTok.Type == TokenType.Char)
+            {
+                ret = new AST(new Token(TokenType.Operator, OperatorType.Concat), ret, readCharSeq());
+                curTokIdx++;
+            }
+            return ret;
+        }
+
+        private AST readRep()
         {
             AST ret = readFactor();
-            while (curTok.Type == TokenType.Operator)
+            bool hasStar = false;
+            while (isCurTok(OperatorType.Star))
             {
-                var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Star)
-                {
-                    curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, op), ret, null);
-                }
-                else
-                {
-                    break;
-                }
+                curTokIdx++;
+                hasStar = true;
+            }
+            if (hasStar)
+            {
+                ret = new AST(new Token(TokenType.Operator, OperatorType.Star), ret, null);
             }
             return ret;
         }
@@ -128,9 +137,8 @@ namespace regexp
             }
             else if (curTok.Type == TokenType.Char)
             {
-                var tmpTok = curTok;
+                ret = new AST(curTok);
                 curTokIdx++;
-                ret = new AST(tmpTok, null, readChars());
                 /*
                 var chars = new List<char>();
                 while (curTok.Type == TokenType.Char)
@@ -153,9 +161,9 @@ namespace regexp
 
         private AST readChars()
         {
-            if (curTok.Type != TokenType.Char) return null;
             var tmpTok = curTok;
             curTokIdx++;
+            if (curTok.Type != TokenType.Char) return null;
             return new AST(tmpTok, null, readChars());
         }
 

@@ -16,7 +16,8 @@ namespace regexp
             CBraceOpen,
             CBraceClose,
             EBraceOpen,
-            EBraceClose
+            EBraceClose,
+            Concat
         }
 
         public class Token

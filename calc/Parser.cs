@@ -41,7 +41,7 @@ namespace calc
             curTokIdx = 0;
             AST ret = readAll();
 
-            if (curTokIdx != tokens.Count) SurplusTokensDetected = true;
+            if (curTokIdx < tokens.Count) SurplusTokensDetected = true;
             return ret;
         }
 
