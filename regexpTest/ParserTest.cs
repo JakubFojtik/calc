@@ -68,6 +68,31 @@ namespace regexpTest
             //Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
         }
 
+        //5|(6|(7|8))
+        [TestMethod]
+        public void NestedOr()
+        {
+            var input = new List<Token> {
+                new Token(TokenType.Char, toNum(5)),
+                new Token(TokenType.Operator, OperatorType.Or),
+                new Token(TokenType.Operator, OperatorType.CBraceOpen),
+                new Token(TokenType.Char, toNum(6)),
+                new Token(TokenType.Operator, OperatorType.Or),
+                new Token(TokenType.Operator, OperatorType.CBraceOpen),
+                new Token(TokenType.Char, toNum(7)),
+                new Token(TokenType.Operator, OperatorType.Or),
+                new Token(TokenType.Char, toNum(8)),
+                new Token(TokenType.Operator, OperatorType.CBraceClose),
+                new Token(TokenType.Operator, OperatorType.CBraceClose),
+            };
+            (string, decimal) res = (null, 0);
+            try { res = parse(input); } catch { }
+            var expectedText = "Operator(Or) Char(5) Operator(CBraceOpen) Operator(Or) Char(6) Operator(CBraceOpen) Operator(Or) Char(7) Char(8) ";
+            //var expectedVal = -2.96807m;
+            Assert.AreEqual(expectedText, res.Item1);
+            //Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
+        }
+
         //(999*)*|99*
         [TestMethod]
         public void Harder()

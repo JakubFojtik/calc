@@ -22,34 +22,35 @@ namespace regexp
 
         public override string ToString() => value.Value.ToString();
 
-        public decimal compute()
+        public string match(string text)
         {
-            var first = left?.compute();
-            var second = right?.compute();
+            if (text == null) throw new ArithmeticException(ERROR);
             switch (value.Type)
             {
-                /*
-                case TokenType.Number:
-                    return (decimal)value.Value;    //todo convert or generic type
+                case TokenType.Char:
+                    if (text.Length > 0 && (char)value.Value == text[0]) return text.Substring(1);
+                    else throw new ArithmeticException(ERROR);
                 case TokenType.Operator:
                     var opType = (OperatorType)value.Value;
-                    decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType].getDecimal(first.Value, second.Value);
                     switch (opType)
                     {
-                        default: //binary op
-                            return defaultBinary(first, second);
-                        case OperatorType.Plus:
-                            if (second != null) return defaultBinary(first, second);
-                            else return first.Value;
-                        case OperatorType.Minus:
-                            if (second != null) return defaultBinary(first, second);
-                            else return -1 * first.Value;
-                        case OperatorType.Sin:
-                            return (decimal)Math.Sin((double)first.Value);
-                        case OperatorType.ASin:
-                            return (decimal)Math.Asin((double)first.Value);
+                        case OperatorType.Or:
+                            try
+                            {
+                                return left.match(text);
+                            }
+                            catch (ArithmeticException)
+                            {
+                                return right.match(text);
+                            }
+                        case OperatorType.Concat:
+                            var rem = left.match(text);
+                            return right?.match(rem) ?? rem;
+                        case OperatorType.CBraceOpen:
+                            return left.match(text);
+                        default:
+                            throw new ArithmeticException(ERROR);
                     }
-                    */
                 default:
                     throw new ArithmeticException(ERROR);
             }

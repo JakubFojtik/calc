@@ -18,7 +18,7 @@ namespace regexp
                 char c = input[i];
                 buffer += c;
                 if (isOperator(buffer)) tokens.Add(new Token(TokenType.Operator, operators[buffer]));
-                else tokens.Add(new Token(TokenType.Char, buffer));
+                else tokens.Add(new Token(TokenType.Char, buffer[0]));
                 buffer = "";
             }
 
