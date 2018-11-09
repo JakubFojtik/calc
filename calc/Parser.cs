@@ -15,7 +15,7 @@ namespace calc
         public enum Associativity { Left, Right }
 
         public ILookup<Priority, OperatorType> operatorsByPriority
-            = new(Priority Priority, OperatorType OperatorType)[]
+            = new (Priority Priority, OperatorType OperatorType)[]
             {
                 ( Priority.Add,  OperatorType.Plus  ),
                 ( Priority.Add,  OperatorType.Minus ),
@@ -56,10 +56,12 @@ namespace calc
         private AST readAll() => readAdd();
 
         //LeftAssoc
-        //???
+        //Op->NOp Rest
+        //Rest-> ? NOp Rest | e
         //RightAssoc
         //Op->NOp Rest
         //Rest-> ? Op | e
+        //Op=>NOp Rest=>NOp ? Op=>NOp ? NOp Rest=>NOp ? NOp ? NOp
 
         //LL parser cannot preserve left associativity when removing left recursion, unless iteration is used.
         private AST readBinaryOperator(Priority priority, Func<AST> nextFun)

@@ -34,7 +34,7 @@ namespace regexp
                     var opType = (OperatorType)value.Value;
                     switch (opType)
                     {
-                        case OperatorType.Or:
+                        case OperatorType.Or:   //co kdyz a*|qwe - vrati stejny text ale matchoval, zaroven potreba zkusit druhou cast. jak zjistim co je lepsi vratit?
                             try
                             {
                                 return left.match(text);
@@ -48,6 +48,17 @@ namespace regexp
                             return right?.match(rem) ?? rem;
                         case OperatorType.CBraceOpen:
                             return left.match(text);
+                        case OperatorType.Star: //a*a
+                            var ret = text;
+                            try
+                            {
+                                while (ret != "") ret = left.match(ret);//!ret2
+                                return ret;
+                            }
+                            catch (ArithmeticException)
+                            {
+                                return ret;
+                            }
                         default:
                             throw new ArithmeticException(ERROR);
                     }
