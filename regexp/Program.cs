@@ -10,7 +10,7 @@ namespace regexp
         {
             while (true)
             {
-                Console.WriteLine("Priklad: ");
+                Console.WriteLine("RegExp: ");
                 string input = Console.ReadLine();
 
                 var lexer = new Lexer();

@@ -6,7 +6,7 @@ namespace calc
     {
         public enum OperatorType
         {
-            BraceOpen, BraceClose, Plus, Minus, Star, Slash, Sin, ASin, Caret, Sqrt, UnPlus, UnMinus, BinPlus, BinMinus
+            BraceOpen, BraceClose, Plus, Minus, Mul, Div, Sin, ASin, Pow, Sqr, Sqrt, UnPlus, UnMinus, BinPlus, BinMinus
         }
 
         public OperatorType Operator { get; private set; }
@@ -18,7 +18,7 @@ namespace calc
             Operator = oper;
         }
 
-        public Associativity Associativity => Operator == OperatorType.Caret ? Associativity.Right : Associativity.Left;
+        public Associativity Associativity => Operator == OperatorType.Pow ? Associativity.Right : Associativity.Left;
 
         //public Priority Priority => operatorsByPriority[]
 
@@ -32,7 +32,7 @@ namespace calc
         {
             return Operator == OperatorType.UnMinus || Operator == OperatorType.UnPlus
                 || Operator == OperatorType.Sin || Operator == OperatorType.ASin
-                || Operator == OperatorType.Sqrt;
+                || Operator == OperatorType.Sqr || Operator == OperatorType.Sqrt;
         }
 
         public override string ToString()

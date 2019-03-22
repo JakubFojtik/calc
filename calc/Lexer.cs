@@ -16,12 +16,13 @@ namespace calc
             { ")",     OperatorType.BraceClose },
             { "+",     OperatorType.Plus },  //we do not know arity yet
             { "-",     OperatorType.Minus }, //we do not know arity yet
-            { "*",     OperatorType.Star },
-            { "/",     OperatorType.Slash },
-            { "^",     OperatorType.Caret },
-            { "**",    OperatorType.Caret },
+            { "*",     OperatorType.Mul },
+            { "/",     OperatorType.Div },
+            { "^",     OperatorType.Pow },
+            { "**",    OperatorType.Pow },
             { "sin",   OperatorType.Sin  },
             { "asin",  OperatorType.ASin },
+            { "sqr",   OperatorType.Sqr },
             { "sqrt",  OperatorType.Sqrt },
         };
 

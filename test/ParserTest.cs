@@ -38,7 +38,7 @@ namespace test
                 new NumberToken(toNum(3)),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(99)),
-                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Mul),
                 new OperatorToken(OperatorType.Minus),
                 new ConstantToken(ConstantToken.ConstantType.E),
                 new OperatorToken(OperatorType.Minus),
@@ -49,7 +49,7 @@ namespace test
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(BinMinus) Operator(BinMinus) Operator(BinPlus) Operator(UnMinus) Number(3) Number(3) Operator(Star) Number(99) Operator(UnMinus) Constant(E) Operator(UnMinus) Operator(UnMinus) Operator(Sin) Number(7) ";
+            var expectedText = "Operator(BinMinus) Operator(BinMinus) Operator(BinPlus) Operator(UnMinus) Number(3) Number(3) Operator(Mul) Number(99) Operator(UnMinus) Constant(E) Operator(UnMinus) Operator(UnMinus) Operator(Sin) Number(7) ";
             var expectedVal = 268.45291m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -62,18 +62,18 @@ namespace test
                 new OperatorToken(OperatorType.Minus),
                 new OperatorToken(OperatorType.Sin),
                 new NumberToken(toNum(99)),
-                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Mul),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(3)),
                 new OperatorToken(OperatorType.Minus),
                 new OperatorToken(OperatorType.Sin),
                 new NumberToken(toNum(7)),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
                 new NumberToken(toNum(7)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(BinMinus) Operator(Star) Operator(UnMinus) Operator(Sin) Number(99) Operator(UnMinus) Number(3) Operator(Sin) Operator(Caret) Number(7) Number(7) ";
+            var expectedText = "Operator(BinMinus) Operator(Mul) Operator(UnMinus) Operator(Sin) Number(99) Operator(UnMinus) Number(3) Operator(Sin) Operator(Pow) Number(7) Number(7) ";
             var expectedVal = -2.62540m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -89,14 +89,14 @@ namespace test
                 new OperatorToken(OperatorType.Sin),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(8)),
-                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Mul),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            //var expectedText = "Operator(Minus) Operator(Star) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
-            var expectedText = "Operator(Star) Operator(UnMinus) Operator(Sin) Operator(UnMinus) Number(8) Operator(UnMinus) Number(3) ";
+            //var expectedText = "Operator(Minus) Operator(Mul) Operator(Sin) Operator(Minus) Number(8) Operator(Minus) Number(3) ";
+            var expectedText = "Operator(Mul) Operator(UnMinus) Operator(Sin) Operator(UnMinus) Number(8) Operator(UnMinus) Number(3) ";
             var expectedVal = -2.96807m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -110,13 +110,13 @@ namespace test
                 new OperatorToken(OperatorType.Sin),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(8)),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(UnMinus) Operator(Sin) Operator(UnMinus) Operator(Caret) Number(8) Operator(UnMinus) Number(3) ";
+            var expectedText = "Operator(UnMinus) Operator(Sin) Operator(UnMinus) Operator(Pow) Number(8) Operator(UnMinus) Number(3) ";
             var expectedVal = 0.00195m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -128,16 +128,16 @@ namespace test
             var input = new List<Token> {
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(1)),
-                new OperatorToken(OperatorType.Star),
+                new OperatorToken(OperatorType.Mul),
                 new NumberToken(toNum(2)),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
                 new OperatorToken(OperatorType.Sin),
                 new OperatorToken(OperatorType.Minus),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Star) Operator(UnMinus) Number(1) Operator(Caret) Number(2) Operator(Sin) Operator(UnMinus) Number(3) ";
+            var expectedText = "Operator(Mul) Operator(UnMinus) Number(1) Operator(Pow) Number(2) Operator(Sin) Operator(UnMinus) Number(3) ";
             var expectedVal = -0.90681m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -151,12 +151,12 @@ namespace test
                 new OperatorToken(OperatorType.BraceOpen),
                 new NumberToken(toNum(3)),
                 new OperatorToken(OperatorType.BraceClose),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Caret) Operator(Sin) Number(3) Number(3) ";
+            var expectedText = "Operator(Pow) Operator(Sin) Number(3) Number(3) ";
             var expectedVal = 0.00281m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -167,12 +167,12 @@ namespace test
             var input = new List<Token> {
                 new OperatorToken(OperatorType.Sin),
                 new NumberToken(toNum(3)),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);
             try { res = parse(input); } catch { }
-            var expectedText = "Operator(Sin) Operator(Caret) Number(3) Number(3) ";
+            var expectedText = "Operator(Sin) Operator(Pow) Number(3) Number(3) ";
             var expectedVal = 0.95637m;
             Assert.AreEqual(expectedText, res.Item1);
             Assert.IsTrue(areNumbersEqual(res.Item2, expectedVal));
@@ -183,8 +183,8 @@ namespace test
         {
             var input = new List<Token> {
                 new NumberToken(toNum(8)),
-                new OperatorToken(OperatorType.Caret),
-                new OperatorToken(OperatorType.Caret),
+                new OperatorToken(OperatorType.Pow),
+                new OperatorToken(OperatorType.Pow),
                 new NumberToken(toNum(3)),
             };
             (string, decimal) res = (null, 0);

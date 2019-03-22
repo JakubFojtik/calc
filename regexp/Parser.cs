@@ -25,9 +25,8 @@ namespace regexp
 
         private AST readReg() => readOr();
 
-        //sin cos 1^5
-        //sin (1)^5 todo braces belong to sin
-        //todo max(3,5)
+        //next is concat of rest
+        //eval concat from right, create ideal number of concat()s
         private AST readOr()
         {
             AST ret = readCharSeq();
@@ -46,7 +45,7 @@ namespace regexp
             }
             return ret;
         }
-        //g*(56*)*
+        //(g*(56*))*
         private AST readCharSeq()
         {
             AST ret = readRep();

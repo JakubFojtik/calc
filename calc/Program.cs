@@ -9,7 +9,7 @@ namespace calc
         {
             while (true)
             {
-                Console.WriteLine("Priklad: ");
+                Console.WriteLine("Expression: ");
                 string input = Console.ReadLine();
 
                 var lexer = new Lexer();

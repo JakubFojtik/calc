@@ -13,16 +13,17 @@ namespace calc
         public static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
             = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
         {
-            { OperatorType.UnPlus,   (a, b) => a                                     },
-            { OperatorType.UnMinus,  (a, b) => -a                                    },
-            { OperatorType.BinPlus,   (a, b) => a + b                                },
-            { OperatorType.BinMinus,  (a, b) => a - b                                },
-            { OperatorType.Star,   (a, b) => a * b                                   },
-            { OperatorType.Slash,  (a, b) => a / b                                   },
-            { OperatorType.Caret,  (a, b) => (decimal)Math.Pow((double)a, (double)b) },
-            { OperatorType.Sin,    (a, b) => (decimal)Math.Sin((double)a)            },
-            { OperatorType.ASin,   (a, b) => (decimal)Math.Asin((double)a)           },
-            { OperatorType.Sqrt,   (a, b) => (decimal)Math.Sqrt((double)a)           },
+            { OperatorType.UnPlus,    (a, b) => a                                       },
+            { OperatorType.UnMinus,   (a, b) => -a                                      },
+            { OperatorType.BinPlus,   (a, b) => a + b                                   },
+            { OperatorType.BinMinus,  (a, b) => a - b                                   },
+            { OperatorType.Mul,       (a, b) => a * b                                   },
+            { OperatorType.Div,       (a, b) => a / b                                   },
+            { OperatorType.Pow,       (a, b) => (decimal)Math.Pow((double)a, (double)b) },
+            { OperatorType.Sin,       (a, b) => (decimal)Math.Sin((double)a)            },
+            { OperatorType.ASin,      (a, b) => (decimal)Math.Asin((double)a)           },
+            { OperatorType.Sqr,       (a, b) => (decimal)Math.Pow((double)a, 2)         },
+            { OperatorType.Sqrt,      (a, b) => (decimal)Math.Sqrt((double)a)           },
         };
 
         public Token value;

@@ -19,12 +19,13 @@ namespace calc
             {
                 ( Priority.Add,  OperatorType.Plus  ),
                 ( Priority.Add,  OperatorType.Minus ),
-                ( Priority.Mult, OperatorType.Star  ),
-                ( Priority.Mult, OperatorType.Slash ),
-                ( Priority.Pow,  OperatorType.Caret ),
+                ( Priority.Mult, OperatorType.Mul  ),
+                ( Priority.Mult, OperatorType.Div ),
                 ( Priority.Fun,  OperatorType.Sin   ),
                 ( Priority.Fun,  OperatorType.ASin  ),
+                ( Priority.Fun,  OperatorType.Sqr  ),
                 ( Priority.Fun,  OperatorType.Sqrt  ),
+                ( Priority.Pow,  OperatorType.Pow ),
             }.ToLookup(x => x.Priority, x => x.OperatorType);
 
         private List<Token> tokens;
