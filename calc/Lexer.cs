@@ -120,37 +120,17 @@ namespace calc
             return true;
         }
 
-        private bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
-
-        private bool isConstantPrefix(string buffer) => constantPrefixes.Contains(buffer);
+        bool isOperatorPrefix(string buffer) => operatorPrefixes.Contains(buffer);
+        bool isConstantPrefix(string buffer) => constantPrefixes.Contains(buffer);
 
         //Prefix enumerations of all operators and constants.
-        public string[] _operatorPrefixes;
-        public string[] _constantPrefixes;
-
-        public string[] constantPrefixes
-        {
-            get
-            {
-                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
-                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
-
-                return _constantPrefixes
-                    ?? (_constantPrefixes = constants.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
-            }
-        }
-
-        public string[] operatorPrefixes
-        {
-            get
-            {
-                IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
-                IEnumerable<string> substrings(string str, IEnumerable<int> lengths) => lengths.Select(i => str.Substring(0, i));
-
-                return _operatorPrefixes
-                    ?? (_operatorPrefixes = operators.Keys.SelectMany(x => substrings(x, prefixLengths(x))).ToArray());
-            }
-        }
+        IEnumerable<int> prefixLengths(string str) => Enumerable.Range(1, str.Length);
+        IEnumerable<string> substrings(string str) => prefixLengths(str).Select(x => str.Substring(0, x));
+        HashSet<string> getPrefixes(IEnumerable<string> keys) => keys.SelectMany(x => substrings(x)).ToHashSet();
+        //Lazy getters
+        Lazy<HashSet<string>> getLazy(IEnumerable<string> keys) => new Lazy<HashSet<string>>(() => getPrefixes(keys));
+        HashSet<string> constantPrefixes => getLazy(constants.Keys).Value;
+        HashSet<string> operatorPrefixes => getLazy(operators.Keys).Value;
 
     }
 }

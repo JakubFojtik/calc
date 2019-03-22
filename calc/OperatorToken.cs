@@ -24,9 +24,15 @@ namespace calc
 
         public override int NumOperands() => isUnary() ? 1 : 2;
 
+        /// <summary>
+        /// do this better, autodetect and merge with AST descendants/children
+        /// </summary>
+        /// <returns></returns>
         public bool isUnary()
         {
-            return Operator == OperatorType.UnMinus || Operator == OperatorType.UnPlus;
+            return Operator == OperatorType.UnMinus || Operator == OperatorType.UnPlus
+                || Operator == OperatorType.Sin || Operator == OperatorType.ASin
+                || Operator == OperatorType.Sqrt;
         }
 
         public override string ToString()
