@@ -7,9 +7,16 @@ namespace calc
 {
     public class Parser
     {
+        //Grammar - more nested are operations with higher priority. Starts at ADD
+        //ADD -> ADD + MUL | ADD - MUL | MUL
+        //MUL -> MUL * POW | MUL / POW | POW
+        //POW -> FACTOR ^ POW | FACTOR
+        //FACTOR -> -POW | +POW | regex([0-9.]+) | (ADD) | FUN(EXP) | FUN POW
+        //Left recursive, but keeps associativity
+
         public static readonly string ERROR = "Mat chyba";
 
-        //Priority is only to group similar operands, real priority is determined by parser
+        //Priority here is only to group similar operands, real priority is determined by parser
         public enum Priority { Add, Mult, Pow, Fun }
 
         public enum Associativity { Left, Right }
@@ -46,15 +53,8 @@ namespace calc
             return ret;
         }
 
-        //Grammar - more nested are operations with higher priority
-        //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
-        //SCIT -> SCIT + NAS | NAS
-        //NAS -> NAS * FUN | FUN
-        //FUN -> Fun FUN | MOC
-        //MOC -> FUNB ^ MOC | FUNB
-        //FUNB -> Fun(SCIT) | CISLO
-        //CISLO -> -NAS | cislo | (SCIT)
-        //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps posere levou asociativitu => list iteration
+        //Theoretical starting point for the whole expression, if ever an op with lower pri than ADD is implemented,
+        //e.g. = for equations
         private AST readAll() => readAdd();
 
         //LeftAssoc - not possible to do 1+1+1, not cloning Op ever again unless in parens
@@ -65,6 +65,7 @@ namespace calc
         //Op->NOp ? Op changes to (but does not need to):
         //Op->NOp Rest
         //Rest-> ? Op | e
+        //Op is current operation (e.g. ADD), ? is operator (+), NOp is operation with next higher priority (MUL)
 
         //Replacing left recursion with right changes associativity to right as well, solved with iteration.
         //see http://www.allisons.org/ll/ProgLang/Grammar/Top-Down/
@@ -104,8 +105,11 @@ namespace calc
         }
 
         //This is the real priority distribution, the nextFun has it higher
+        //ADD -> ADD + MUL | ADD - MUL | MUL
         private AST readAdd() => readBinaryOperator(Priority.Add, readMul);
+        //MUL -> MUL * POW | MUL / POW | POW
         private AST readMul() => readBinaryOperator(Priority.Mult, readPow);
+        //POW -> FACTOR ^ POW | FACTOR
         private AST readPow() => readBinaryOperator(Priority.Pow, readFactor);
 
         //FACTOR -> NUM
@@ -126,8 +130,8 @@ namespace calc
                     var op = opToken.Operator;
                     switch (op)
                     {
-                        //Apparently should have lower priority since it has to call Pow instead of Factor or higher pri
-                        //-1^2 should be -1 since pow has higher priority, so should mul but google has it otherwise
+                        //Maybe should have lower priority since it has to call Pow instead of Factor or higher pri
+                        //-1^2 should be -1 since POW has higher priority, so should MUL but google has it otherwise
                         //per google:
                         //sin 2 * 3 = (sin  2) * 3
                         //sin 2 ^ 3 =  sin (2  ^ 3)
