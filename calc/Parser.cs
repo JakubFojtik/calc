@@ -35,7 +35,7 @@ namespace calc
 
         public bool SurplusTokensDetected { get; private set; }
 
-        public AST parser(List<Token> tokens)
+        public AST Parse(List<Token> tokens)
         {
             if (tokens.Count < 1) return null;
             this.tokens = tokens;
@@ -46,6 +46,7 @@ namespace calc
             return ret;
         }
 
+        //Grammar - more nested are operations with higher priority
         //Gramatika - nejvic zanorene jsou nejvyssi priority, vsechny pravidla ukousnou 1 a zbytek je vse dalsi. Start: SCIT
         //SCIT -> SCIT + NAS | NAS
         //NAS -> NAS * FUN | FUN
@@ -56,36 +57,41 @@ namespace calc
         //odstr leve rekurze SCIT->NAS ?SCIT, ?SCIT->+ SCIT ?SCIT|eps posere levou asociativitu => list iteration
         private AST readAll() => readAdd();
 
-        //LeftAssoc
+        //LeftAssoc - not possible to do 1+1+1, not cloning Op ever again unless in parens
+        //Op->Op ? NOp changes to:
         //Op->NOp Rest
         //Rest-> ? NOp Rest | e
         //RightAssoc
+        //Op->NOp ? Op changes to (but does not need to):
         //Op->NOp Rest
         //Rest-> ? Op | e
-        //Op=>NOp Rest=>NOp ? Op=>NOp ? NOp Rest=>NOp ? NOp ? NOp
 
-        //LL parser cannot preserve left associativity when removing left recursion, unless iteration is used.
+        //Replacing left recursion with right changes associativity to right as well, solved with iteration.
+        //see http://www.allisons.org/ll/ProgLang/Grammar/Top-Down/
         private AST readBinaryOperator(Priority priority, Func<AST> nextFun)
         {
             AST ret;
             ret = nextFun();
             var operatorTypes = operatorsByPriority[priority];
-            OperatorToken opToken;
-            while ((opToken = curTok as OperatorToken) != null)
+            while (curTok is OperatorToken opToken)
             {
                 var op = opToken.Operator;
-                var newOp = op;
-                if (priority == Priority.Add) newOp = op == OperatorType.Minus ? OperatorType.BinMinus : OperatorType.BinPlus;
                 if (operatorTypes.Contains(op))
                 {
+                    var binOp = op;
+                    if (priority == Priority.Add) binOp = op == OperatorType.Minus ? OperatorType.BinMinus : OperatorType.BinPlus;
+                    AST operate(AST a, AST b) => new AST(new OperatorToken(binOp), a, b);
+
                     curTokIdx++;
-                    Func<AST, AST, AST> operate = (a, b) => new AST(new OperatorToken(newOp), a, b);
                     if (opToken.Associativity == Associativity.Left)
                     {
+                        //operate the whole current AST with the following higher-priority function
+                        //relying on the iteration cycle to nest it all into next repetition of current op
                         ret = operate(ret, nextFun());
                     }
                     else
                     {
+                        //operate the single current higher-priority function with the rest of the expression using recursive self-call
                         ret = operate(ret, readBinaryOperator(priority, nextFun));
                     }
                 }
@@ -97,72 +103,69 @@ namespace calc
             return ret;
         }
 
+        //This is the real priority distribution, the nextFun has it higher
         private AST readAdd() => readBinaryOperator(Priority.Add, readMul);
         private AST readMul() => readBinaryOperator(Priority.Mult, readPow);
         private AST readPow() => readBinaryOperator(Priority.Pow, readFactor);
 
+        //FACTOR -> NUM
+        //FACTOR -> -POW
+        //FACTOR -> (EXP)
+        //FACTOR -> FUN(EXP)
+        //FACTOR -> FUN POW
         private AST readFactor()
         {
-            AST ret;
-            OperatorToken opToken;
-            NumberToken numToken;
-            ConstantToken conToken;
-            if ((opToken = curTok as OperatorToken) != null)
+            switch (curTok)
             {
-                var functions = operatorsByPriority[Priority.Fun];
-
-                var op = opToken.Operator;
-                if (op == OperatorType.Minus || op == OperatorType.Plus)
-                {
+                case NumberToken numToken: //Includes constants
                     curTokIdx++;
-                    var newOp = op == OperatorType.Minus ? OperatorType.UnMinus : OperatorType.UnPlus;
-                    ret = new AST(new OperatorToken(newOp), readPow(), null);
-                }
-                else if (functions.Contains(op))
-                {
-                    var fun = opToken;
-                    curTokIdx++;
-                    if ((opToken = curTok as OperatorToken) != null && opToken.Operator == OperatorType.BraceOpen)
-                    {
-                        ret = new AST(fun, readFactor(), null);
-                    }
-                    else
-                    {
-                        ret = new AST(fun, readPow(), null);
-                    }
-                }
-                else if (op == OperatorType.BraceOpen)
-                {
-                    ret = readBrace();
-                }
-                else throw new ArithmeticException(ERROR);
-            }
-            else if ((numToken = curTok as NumberToken) != null)
-            {
-                curTokIdx++;
-                ret = new AST(numToken);
-            }
-            else if ((conToken = curTok as ConstantToken) != null)
-            {
-                curTokIdx++;
-                ret = new AST(conToken);
-            }
-            else throw new ArithmeticException(ERROR);
+                    return new AST(numToken);
+                case OperatorToken opToken:
+                    var functions = operatorsByPriority[Priority.Fun];
 
-            return ret;
-        }
-
-        private AST readBrace()
-        {
-            AST ret;
-            curTokIdx++;
-            ret = readAll();
-            if (isCurTok(OperatorType.BraceClose))
-            {
-                curTokIdx++;
+                    var op = opToken.Operator;
+                    switch (op)
+                    {
+                        //Apparently should have lower priority since it has to call Pow instead of Factor or higher pri
+                        //-1^2 should be -1 since pow has higher priority, so should mul but google has it otherwise
+                        //per google:
+                        //sin 2 * 3 = (sin  2) * 3
+                        //sin 2 ^ 3 =  sin (2  ^ 3)
+                        //-2^-3^-4 ... unaryMinus should have both lower and higher priority than pow
+                        //Lower is proposed for being a simpler op, higher because pow only calls higher ops
+                        //ReadUnaryAdd after readAdd? Complicated, it's the only unary, and would hardly work
+                        case OperatorType.Minus:
+                        case OperatorType.Plus:
+                            curTokIdx++;
+                            var unaryType = op == OperatorType.Minus ? OperatorType.UnMinus : OperatorType.UnPlus;
+                            return new AST(new OperatorToken(unaryType), readPow(), null);
+                        case OperatorType.BraceOpen:
+                            curTokIdx++;
+                            AST ret = readAll();
+                            if (isCurTok(OperatorType.BraceClose))
+                            {
+                                curTokIdx++;
+                            }
+                            else throw new ArithmeticException(ERROR);
+                            return ret;
+                        case var _ when functions.Contains(op):
+                            curTokIdx++;
+                            //Peek 1 token, if brace, then it is owned by the function, per google calc
+                            //So Fun (Exp) Op Exp is handled as (Fun (Exp)) Op Exp instead of respecting Op's priority
+                            if (curTok is OperatorToken nextTok && nextTok.Operator == OperatorType.BraceOpen)
+                            {
+                                return new AST(opToken, readFactor(), null);
+                            }
+                            else
+                            {
+                                return new AST(opToken, readPow(), null);
+                            }
+                        default:
+                            throw new ArithmeticException(ERROR);
+                    }
+                default:
+                    throw new ArithmeticException(ERROR);
             }
-            else throw new ArithmeticException(ERROR);
-            return ret;
         }
 
         private bool isCurTok(OperatorType op)

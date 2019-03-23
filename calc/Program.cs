@@ -13,12 +13,12 @@ namespace calc
                 string input = Console.ReadLine();
 
                 var lexer = new Lexer();
-                List<Token> tokens = lexer.lexer(input);
+                List<Token> tokens = lexer.Lexerize(input);
                 //Console.WriteLine("Lexer: " + string.Join(", ", tokens));
 
                 Console.WriteLine("Parser:");
                 var parser = new Parser();
-                AST ast = parser.parser(tokens);
+                AST ast = parser.Parse(tokens);
                 Console.WriteLine(ast?.printDeriv());
                 Console.WriteLine();
                 var res = ast?.compute() ?? 0m;

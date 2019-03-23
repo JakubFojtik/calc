@@ -1,7 +1,7 @@
-﻿using calc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using calc;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static calc.OperatorToken;
 
 namespace test
@@ -12,7 +12,7 @@ namespace test
         private static (string, decimal) parse(List<Token> input)
         {
             var parser = new Parser();
-            var res = parser.parser(input);
+            var res = parser.Parse(input);
             var str = res.printDFS(res);
             if (parser.SurplusTokensDetected) throw new AssertFailedException("Did not parse all.");
             return (str, res.compute());

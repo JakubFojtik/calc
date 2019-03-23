@@ -27,6 +27,7 @@ namespace regexp
 
         //next is concat of rest
         //eval concat from right, create ideal number of concat()s
+        //but what about a**, it should not be concat(a*, *)
         private AST readOr()
         {
             AST ret = readCharSeq();
@@ -115,6 +116,7 @@ namespace regexp
             return ret;
         }
 
+        //do not use, last char could be subject to postfix operator like star
         private AST readChars()
         {
             var tmpTok = curTok;

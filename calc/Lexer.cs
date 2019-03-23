@@ -37,7 +37,7 @@ namespace calc
 
         public enum State { Empty, Number, OperatorOrConstant }
 
-        public List<Token> lexer(string input)
+        public List<Token> Lexerize(string input)
         {
             List<Token> tokens = new List<Token>();
             string buffer = "";
