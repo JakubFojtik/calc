@@ -8,7 +8,7 @@ namespace calc
 {
     public class AST
     {
-        public static readonly string ERROR = "AST chyba";
+        public static readonly string ERROR = "AST error";
 
         public static Dictionary<OperatorType, Func<decimal, decimal, decimal>> operatorImpls
             = new Dictionary<OperatorType, Func<decimal, decimal, decimal>>
@@ -22,7 +22,7 @@ namespace calc
             { OperatorType.Pow,       (a, b) => (decimal)Math.Pow((double)a, (double)b) },
             { OperatorType.Sin,       (a, b) => (decimal)Math.Sin((double)a)            },
             { OperatorType.ASin,      (a, b) => (decimal)Math.Asin((double)a)           },
-            { OperatorType.Sqr,       (a, b) => (decimal)Math.Pow((double)a, 2)         },
+            { OperatorType.Sqr,       (a, b) => a * a                                   },
             { OperatorType.Sqrt,      (a, b) => (decimal)Math.Sqrt((double)a)           },
         };
 

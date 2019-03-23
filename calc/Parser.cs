@@ -14,7 +14,7 @@ namespace calc
         //FACTOR -> -POW | +POW | regex([0-9.]+) | (ADD) | FUN(EXP) | FUN POW
         //Left recursive, but keeps associativity
 
-        public static readonly string ERROR = "Mat chyba";
+        public static readonly string ERROR = "Math error";
 
         //Priority here is only to group similar operands, real priority is determined by parser
         public enum Priority { Add, Mult, Pow, Fun }
