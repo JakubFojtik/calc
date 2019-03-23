@@ -44,32 +44,20 @@ namespace calc
         {
             var first = left?.compute();
             var second = right?.compute();
-            OperatorToken opToken;
-            NumberToken numToken;
-            ConstantToken conToken;
-            if ((numToken = value as NumberToken) != null)
+            switch (value)
             {
-                return numToken.Value;
-            }
-            else if ((conToken = value as ConstantToken) != null)
-            {
-                return conToken.Value;
-            }
-            else if ((opToken = value as OperatorToken) != null)
-            {
-                var opType = opToken.Operator;
-                decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType](first.Value, second.Value);
-                decimal defaultUnary(decimal? left) => operatorImpls[opType](first.Value, 0);
-                switch (opType)
-                {
-                    default:    //todo remove unary change to impls[x]
-                        if (second == null) return defaultUnary(first);
-                        else return defaultBinary(first, second);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException(ERROR);
+                case NumberToken numToken: //Includes constants
+                    return numToken.Value;
+                case OperatorToken opToken:
+                    var opType = opToken.Operator;
+                    decimal defaultBinary(decimal? left, decimal? right) => operatorImpls[opType](first.Value, second.Value);
+                    decimal defaultUnary(decimal? left) => operatorImpls[opType](first.Value, 0);
+
+                    //todo remove unary change to impls[x], make it known how many args each op has
+                    if (second == null) return defaultUnary(first);
+                    else return defaultBinary(first, second);
+                default:
+                    throw new InvalidOperationException(ERROR);
             }
         }
 
@@ -78,7 +66,7 @@ namespace calc
             var lines = new Dictionary<int, AST>();
             mapLines(this, lines);
             StringBuilder ret = new StringBuilder();
-            Func<AST, string> writeItem = item =>
+            string writeItem(AST item)
             {
                 if (item != null)
                 {
@@ -87,17 +75,17 @@ namespace calc
                     else return lines.First(x => x.Value.value == val).Key.ToString();
                 }
                 else return "";
-            };
+            }
 
             foreach (var item in lines.OrderBy(x => x.Key))
             {
                 string first = writeItem(item.Value.left);
                 string second = writeItem(item.Value.right);
-                if (item.Value.value.NumOperands() == 1)
+                if (item.Value.left != null && item.Value.right == null)    //todo item.Value.left != null && item.Value.right == null
                 {
                     ret.AppendLine(string.Format("{0}: {1} -> {2}", item.Key, item.Value.value, first));
                 }
-                if (item.Value.value.NumOperands() == 2)
+                if (item.Value.left != null && item.Value.right != null)
                 {
                     ret.AppendLine(string.Format("{0}: {1} -> {2}, {3}", item.Key, item.Value.value, first, second));
                 }
