@@ -34,7 +34,7 @@ namespace regexp
                     var opType = (OperatorType)value.Value;
                     switch (opType)
                     {
-                        case OperatorType.Or:   //co kdyz a*|qwe - vrati stejny text ale matchoval, zaroven potreba zkusit druhou cast. jak zjistim co je lepsi vratit?
+                        case OperatorType.Pipe:   //co kdyz a*|qwe - vrati stejny text ale matchoval, zaroven potreba zkusit druhou cast. jak zjistim co je lepsi vratit?
                             try
                             {
                                 return left.match(text);

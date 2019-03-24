@@ -13,6 +13,14 @@ namespace regexp
 
         public bool SurplusTokensDetected { get; private set; }
 
+        //Grammar from http://matt.might.net/articles/parsing-regex-with-recursive-descent/
+        //<regex> ::= <term> '|' <regex>
+        //         |  <term>
+        //<term> ::= { <factor> }
+        //<factor> ::= <base> { '*' }
+        //<base> ::= <char>
+        //        |  '\' <char>
+        //        |  '(' <regex> ')'
         public AST parser(List<Token> tokens)
         {
             this.tokens = tokens;
@@ -23,21 +31,16 @@ namespace regexp
             return ret;
         }
 
-        private AST readReg() => readOr();
-
-        //next is concat of rest
-        //eval concat from right, create ideal number of concat()s
-        //but what about a**, it should not be concat(a*, *)
-        private AST readOr()
+        private AST readReg()
         {
-            AST ret = readCharSeq();
+            AST ret = readTerm();
             while (curTok.Type == TokenType.Operator)
             {
                 var op = (OperatorType)curTok.Value;
-                if (op == OperatorType.Or)
+                if (op == OperatorType.Pipe)
                 {
                     curTokIdx++;
-                    ret = new AST(new Token(TokenType.Operator, op), ret, readOr());
+                    ret = new AST(new Token(TokenType.Operator, op), ret, readReg());
                 }
                 else
                 {
@@ -46,22 +49,31 @@ namespace regexp
             }
             return ret;
         }
-        //(g*(56*))*
-        private AST readCharSeq()
+        //everything up to OR or EOL or closing braces e.g. (gh*(56*))*
+        //simply check terminators, otherwise there must be a factor or input error
+        private AST readTerm()
         {
-            AST ret = readRep();
-            var starterOps = new List<OperatorType> { OperatorType.CBraceOpen, OperatorType.EBraceOpen };
-            while (curTok.Type == TokenType.Char || (curTok.Type == TokenType.Operator && starterOps.Contains((OperatorType)curTok.Value)))
+            AST ret = new AST(new Token(TokenType.Empty));
+            var stoppers = new List<OperatorType> { OperatorType.Pipe, OperatorType.CBraceClose, OperatorType.EBraceClose };
+            while (curTok.Type == TokenType.Char
+                || (curTok.Type == TokenType.Operator && !stoppers.Contains((OperatorType)curTok.Value)))
             {
-                ret = new AST(new Token(TokenType.Operator, OperatorType.Concat), ret, readCharSeq());
-                //curTokIdx++;
+                if (ret.value.Type == TokenType.Empty)
+                {
+                    ret = readFactor();
+                }
+                else
+                {
+                    ret = new AST(new Token(TokenType.Operator, OperatorType.Concat), ret, readFactor());
+                }
             }
             return ret;
         }
 
-        private AST readRep()
+        private AST readFactor()
         {
-            AST ret = readFactor();
+            AST ret = readBase();
+            //microopt - sequential stars can be reduced to one e.g. (ab***)*** should be equal to (ab*)*
             bool hasStar = false;
             while (isCurTok(OperatorType.Star))
             {
@@ -75,7 +87,7 @@ namespace regexp
             return ret;
         }
 
-        private AST readFactor()
+        private AST readBase()
         {
             AST ret;
 
@@ -95,6 +107,7 @@ namespace regexp
             else if (curTok.Type == TokenType.Char)
             {
                 ret = new AST(curTok);
+                //if (curTok.Value == ) escaped char
                 curTokIdx++;
                 /*
                 var chars = new List<char>();
@@ -111,25 +124,16 @@ namespace regexp
                 }
                 ret = new AST(new Token(TokenType.Char, chars));*/
             }
-            else ret = null;
+            else
+                throw new ArithmeticException(ERROR);
 
             return ret;
         }
 
-        //do not use, last char could be subject to postfix operator like star
-        private AST readChars()
-        {
-            var tmpTok = curTok;
-            curTokIdx++;
-            if (curTok.Type != TokenType.Char) return null;
-            return new AST(tmpTok, null, readChars());
-        }
-
         private AST readBrace(OperatorType closer)
         {
-            AST ret;
             curTokIdx++;
-            ret = readReg();
+            AST ret = readReg();
             if (isCurTok(closer))
             {
                 curTokIdx++;

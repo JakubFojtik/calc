@@ -4,14 +4,14 @@ namespace regexp
 {
     public class Strutures
     {
-        public enum TokenType { Char, Operator, EOF }
+        public enum TokenType { Char, Operator, Empty, EOF }
         public enum OperatorType
         {
             Dot,
             Star,
             //Caret,
             //Dollar,
-            Or,
+            Pipe,
             CBraceOpen,
             CBraceClose,
             EBraceOpen,
@@ -172,7 +172,7 @@ namespace regexp
             { "*",  OperatorType.Star        },
             //{ "^",  OperatorType.Caret       },
             //{ "$",  OperatorType.Dollar      },
-            { "|",  OperatorType.Or          },
+            { "|",  OperatorType.Pipe          },
             { "(",  OperatorType.CBraceOpen  },
             { ")",  OperatorType.CBraceClose },
             { "[",  OperatorType.EBraceOpen  },
