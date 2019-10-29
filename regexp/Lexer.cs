@@ -6,6 +6,21 @@ namespace regexp
 {
     public class Lexer
     {
+        public static Dictionary<string, OperatorType> operators
+            = new Dictionary<string, OperatorType>
+        {
+            { ".",  OperatorType.Dot         },
+            { "*",  OperatorType.Star        },
+            //{ "^",  OperatorType.Caret       },
+            //{ "$",  OperatorType.Dollar      },
+            { "|",  OperatorType.Pipe        },
+            { "(",  OperatorType.CBraceOpen  },
+            { ")",  OperatorType.CBraceClose },
+            { "[",  OperatorType.EBraceOpen  },
+            { "]",  OperatorType.EBraceClose },
+            { "\\",  OperatorType.Escape },
+        };
+
         public enum State { Empty, Char, Operator }
 
         public List<Token> lexer(string input)
@@ -16,10 +31,18 @@ namespace regexp
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                buffer += c;
-                if (isOperator(buffer)) tokens.Add(new Token(TokenType.Operator, operators[buffer]));
-                else tokens.Add(new Token(TokenType.Char, buffer[0]));
-                buffer = "";
+                if (c.ToString() == operators.First(x => x.Value == OperatorType.Escape).Key)
+                {
+                    i++;
+                    tokens.Add(new Token(TokenType.Char, input[i]));
+                }
+                else
+                {
+                    buffer += c;
+                    if (isOperator(buffer)) tokens.Add(new Token(TokenType.Operator, operators[buffer]));
+                    else tokens.Add(new Token(TokenType.Char, buffer[0]));
+                    buffer = "";
+                }
             }
 
             return tokens;
